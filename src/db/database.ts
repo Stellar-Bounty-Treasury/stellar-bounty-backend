@@ -86,6 +86,33 @@ function initSchema(db: Database.Database): void {
       UNIQUE(milestone_id, reviewer_address)
     );
 
+    CREATE TABLE IF NOT EXISTS settlements (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      bounty_id INTEGER NOT NULL,
+      milestone_id INTEGER NOT NULL,
+      allocation_type TEXT NOT NULL DEFAULT 'fixed',
+      total_amount REAL NOT NULL,
+      recipients_json TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      transaction_hash TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (bounty_id) REFERENCES bounties(id) ON DELETE CASCADE,
+      FOREIGN KEY (milestone_id) REFERENCES milestones(id) ON DELETE CASCADE,
+      UNIQUE(bounty_id, milestone_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS transactions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      transaction_hash TEXT NOT NULL UNIQUE,
+      operation_type TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'DETECTED',
+      ledger INTEGER,
+      details_json TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS contract_events (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       event_key TEXT NOT NULL UNIQUE,
@@ -95,6 +122,8 @@ function initSchema(db: Database.Database): void {
       transaction_hash TEXT,
       ledger INTEGER,
       payload TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'processed',
+      retry_count INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL
     );
 
@@ -102,6 +131,8 @@ function initSchema(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_milestones_bounty ON milestones(bounty_id);
     CREATE INDEX IF NOT EXISTS idx_contributions_bounty ON contributions(bounty_id);
     CREATE INDEX IF NOT EXISTS idx_verifications_milestone ON verifications(milestone_id);
+    CREATE INDEX IF NOT EXISTS idx_settlements_bounty ON settlements(bounty_id);
+    CREATE INDEX IF NOT EXISTS idx_transactions_hash ON transactions(transaction_hash);
     CREATE INDEX IF NOT EXISTS idx_events_bounty ON contract_events(bounty_id);
     CREATE INDEX IF NOT EXISTS idx_events_key ON contract_events(event_key);
   `);

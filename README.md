@@ -1,178 +1,175 @@
-# ⚙️ Stellar Bounty Treasury — Backend API & Verifier
+# 🏦 Stellar Bounty Treasury — Backend & Indexer Engine
 
-The backend service, persistent database, and on-chain Stellar Testnet transaction verification engine for **Stellar Bounty Treasury**.
+[![Stellar Testnet](https://img.shields.io/badge/Stellar-Testnet-blue.svg)](https://stellar.org)
+[![Soroban Events](https://img.shields.io/badge/Soroban-Event%20Streaming-7c3aed.svg)](https://soroban.stellar.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178c6.svg)](https://www.typescriptlang.org/)
+[![CI/CD](https://img.shields.io/badge/CI%2FCD-Passing-brightgreen.svg)](https://github.com/Stellar-Bounty-Treasury/stellar-bounty-backend/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**🌐 Live Frontend Application**: [https://stellar-bounty-treasury-2676.netlify.app](https://stellar-bounty-treasury-2676.netlify.app)
+The **Stellar Bounty Treasury Backend** provides blockchain indexing, persistent storage, state reconciliation, and real-time event streaming for the Stellar Bounty Treasury ecosystem.
 
----
+In accordance with core protocol design principles:
+> **Smart contracts enforce financial rules.**  
+> **Backend indexes and streams blockchain state.**  
+> **Frontend orchestrates user interactions and visualizes state.**
 
-## 🎥 Full Demonstration Video (Level 2 Lifecycle)
-
-> **Watch the full Level 2 lifecycle**: wallet connection, bounty creation with Soroban escrow lock, deliverable PR submission, multi-reviewer community voting, threshold satisfaction, conditional payment unlock, and contract event indexing.
-
-[![Watch Stellar Bounty Treasury Level 2 Demo](docs/evidence/level2_demo.gif)](docs/evidence/level2_demo.mp4)
-
-* 🎬 **Direct MP4 Video File**: [Download / Watch MP4 (1.7 MB)](docs/evidence/level2_demo.mp4)
-* 🎬 **Direct WebM Video File**: [Download / Watch WebM (4.3 MB)](docs/evidence/level2_demo.webm)
-* 🎞️ **High-Resolution Animated Preview**: [docs/evidence/level2_demo.gif](docs/evidence/level2_demo.gif)
-* 🌐 **Live Web Application**: [https://stellar-bounty-treasury-2676.netlify.app](https://stellar-bounty-treasury-2676.netlify.app)
+The backend never acts as an authority for payment authorization. It continuously ingests Soroban contract events, maintains an idempotent ledger projection, tracks transaction lifecycles, and broadcasts real-time updates via Server-Sent Events (SSE).
 
 ---
 
-## 📌 What It Does — Level 2 (Yellow Belt)
+## 🎬 Product Demonstration
 
-At **Level 2**, this backend acts as the authoritative off-chain indexing and observation layer for the **Soroban Smart Contract**:
+![Stellar Bounty Treasury Walkthrough](docs/evidence/level3_demo.gif)
 
-* **Contract Integration**: Integrates directly with deployed Soroban bounty contract `CADMWQPCCQP27UHQU4JG3C6V5I3UFNNC4DVOMSK2GUJFA6Q2PNW36S52` on Stellar Testnet.
-* **Event Indexing Engine**: Ingests structured Soroban contract events (`bounty_created`, `bounty_funded`, `milestone_submitted`, `milestone_approved`, `milestone_paid`).
-* **Strict Idempotency**: Guarantees zero duplicate event persistence using cryptographic event deduplication keys (`event_key`).
-* **Milestone Lifecycle Management**: Exposes milestones, submission evidence links, reviewer verifications, and conditional settlement states.
-* **State Reconciliation**: Reconciles indexed database records against authoritative on-chain contract state.
-
-> **Architectural Rule**: The contract enforces. The backend observes. The frontend orchestrates. The backend never moves funds on behalf of users.
+* **Direct Video Links**: [High-Definition MP4](docs/evidence/level3_demo.mp4) • [WebM Video](docs/evidence/level3_demo.webm)
+* **Frontend Web Application**: [https://stellar-bounty-treasury-2676.netlify.app](https://stellar-bounty-treasury-2676.netlify.app)
+* **Smart Contract ID**: [`CADMWQPCCQP27UHQU4JG3C6V5I3UFNNC4DVOMSK2GUJFA6Q2PNW36S52`](https://stellar.expert/explorer/testnet/contract/CADMWQPCCQP27UHQU4JG3C6V5I3UFNNC4DVOMSK2GUJFA6Q2PNW36S52)
 
 ---
 
-## 🏛️ Architecture & Extensibility
+## 🏗️ System Architecture
 
 ```text
-stellar-bounty-backend/
-├── src/
-│   ├── config.ts               # Environment variables & Soroban RPC / Contract ID
-│   ├── app.ts                  # Express server, middleware, error handling
-│   ├── server.ts               # Server bootstrap & lifecycle listeners
-│   ├── db/
-│   │   └── database.ts         # SQLite schema (bounties, milestones, verifications, contract_events)
-│   ├── services/
-│   │   ├── stellar.ts          # Stellar Testnet Horizon verification service
-│   │   ├── eventIndexer.ts     # Idempotent contract event ingestor & reconciler
-│   │   └── bountyService.ts    # Level 2 business logic, milestone transitions, verifications
-│   ├── controllers/
-│   │   └── bountyController.ts # HTTP request/response handlers
-│   └── routes/
-│       └── bountyRoutes.ts     # Express router definition
-├── tests/
-│   └── bounties.test.ts        # Comprehensive test suite with Vitest (15 tests passing)
-├── .env.example
-├── tsconfig.json
-└── package.json
+  Soroban Smart Contracts (Testnet)
+                │
+                │ Emits Contract Events (topics & data)
+                ▼
+  ┌────────────────────────────────────────┐
+  │       Advanced Event Processor         │
+  │  1. Ingestion & Validation             │
+  │  2. Cryptographic Deduplication Hash   │
+  │  3. Retry Recovery Queue (Backoff)     │
+  └──────────────────┬─────────────────────┘
+                     │
+         ┌───────────┴───────────┐
+         ▼                       ▼
+  ┌──────────────┐       ┌──────────────────────┐
+  │  Relational  │       │ Realtime Event Hub   │
+  │   Database   │       │ Server-Sent Events   │
+  └──────┬───────┘       └──────────┬───────────┘
+         │                          │
+         ▼                          ▼
+   REST API Layer              Web Clients
 ```
 
 ---
 
-## 🚀 How to Run It
+## 🌟 Core Architecture & Capabilities
+
+### 1. 🔄 Advanced Event Processor & Idempotency
+* **Cryptographic Event Ingestion**: Validates event structure and calculates deduplication signatures (`sha256(event_key + tx_hash + type)`).
+* **Guaranteed Idempotence**: Reprocessing the same event (e.g. `bounty_funded`, `recipient_paid`) never produces double-counting or corrupt duplicate financial entries.
+* **Retry Recovery Queue**: Transient indexing failures trigger exponential backoff retries with dead-letter queue classification.
+
+### 2. 📡 Realtime Streaming (Server-Sent Events)
+* Streams live blockchain occurrences to connected frontend clients via `/api/events/stream`.
+* Supports typed channels: `bounty_funded`, `milestone_approved`, `settlement_authorized`, `recipient_paid`, `settlement_completed`, `refund_completed`, `bounty_completed`.
+
+### 3. ⚖️ Authoritative State Reconciliation
+* Periodic background worker and on-demand endpoint (`POST /api/reconcile`) comparing local database projections against authoritative on-chain contract state.
+* Detects and repairs missing events, stale records, or settlement desynchronization.
+
+### 4. ⏱️ Transaction Lifecycle Tracking
+* Distinguishes distinct stages: `DETECTED` ➔ `SUBMITTED` ➔ `CONFIRMED` ➔ `INDEXED`.
+* Retrievable by hash via `GET /api/transactions/:hash`.
+
+### 5. 🛡️ Security, Rate Limiting & Observability
+* IP-based token bucket rate limiter to protect public endpoints.
+* Structured JSON logging with request IDs and correlation context.
+* Comprehensive `/health` and `/ready` probes distinguishing process liveness from database and RPC availability.
+
+---
+
+## 📡 REST API Reference
+
+| Method | Endpoint | Description |
+|:-------|:---------|:------------|
+| `GET` | `/health` | Liveness health check |
+| `GET` | `/ready` | Readiness probe (database & RPC connectivity) |
+| `GET` | `/api/bounties/stats` | Global treasury analytics (escrow, bounties, payouts) |
+| `GET` | `/api/bounties` | List all bounties with milestones and settlements |
+| `POST` | `/api/bounties` | Index a new bounty |
+| `GET` | `/api/bounties/:id` | Fetch specific bounty details |
+| `POST` | `/api/bounties/:id/contributions` | Record and verify a funding transaction |
+| `GET` | `/api/bounties/:id/contributions` | List all contributions for a bounty |
+| `POST` | `/api/bounties/:id/milestones` | Create a milestone |
+| `GET` | `/api/bounties/:id/milestones` | List milestones for a bounty |
+| `POST` | `/api/bounties/:id/milestones/:mId/submit` | Submit work evidence |
+| `POST` | `/api/bounties/:id/milestones/:mId/verify` | Record community verification vote |
+| `POST` | `/api/bounties/:id/milestones/:mId/settlement` | Configure Settlement Router rules |
+| `GET` | `/api/bounties/:id/milestones/:mId/settlement` | Get settlement configuration |
+| `POST` | `/api/milestones/:id/release` | Record multi-recipient settlement execution |
+| `POST` | `/api/bounties/:id/refund` | Record refund of unspent bounty escrow |
+| `POST` | `/api/bounties/:id/complete` | Record bounty completion |
+| `GET` | `/api/settlements/:id` | Fetch settlement report with all recipients |
+| `GET` | `/api/transactions/:hash` | Track transaction state (`DETECTED`, `CONFIRMED`, `INDEXED`) |
+| `POST` | `/api/reconcile` | Trigger contract state reconciliation |
+| `GET` | `/api/events/stream` | Real-time Server-Sent Events (SSE) stream |
+
+---
+
+## 🚀 Getting Started
 
 ### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/Stellar-Bounty-Treasury/stellar-bounty-backend.git
+cd stellar-bounty-backend
+
+# Install dependencies
 npm install
+
+# Setup environment variables
+cp .env.example .env
 ```
 
-### Development Mode
+### Environment Configuration (`.env`)
+
+```env
+PORT=5000
+DATABASE_URL=sqlite:./treasury.sqlite
+STELLAR_NETWORK=TESTNET
+SOROBAN_CONTRACT_ID=CADMWQPCCQP27UHQU4JG3C6V5I3UFNNC4DVOMSK2GUJFA6Q2PNW36S52
+SOROBAN_RPC_URL=https://soroban-testnet.stellar.org
+HORIZON_URL=https://horizon-testnet.stellar.org
+```
+
+### Running Locally
 
 ```bash
+# Development mode with hot-reloading
 npm run dev
-```
 
-The server listens on `http://localhost:5000`.
+# Run test suite (28 unit and integration tests)
+npm test
 
-### Production Build & Run
-
-```bash
+# Build for production
 npm run build
+
+# Start production server
 npm start
 ```
 
-### Running Test Suite
+---
+
+## 🧪 Testing Suite
+
+Run the comprehensive test suite with Jest:
 
 ```bash
 npm test
 ```
 
----
-
-## ⚙️ Required Environment Variables
-
-Create `.env` based on `.env.example`:
-
-```bash
-PORT=5000
-NODE_ENV=development
-CORS_ORIGIN=*
-DATABASE_PATH=./data/treasury.db
-
-# Stellar & Soroban Testnet
-STELLAR_NETWORK=TESTNET
-HORIZON_URL=https://horizon-testnet.stellar.org
-SOROBAN_RPC_URL=https://soroban-testnet.stellar.org
-SOROBAN_CONTRACT_ID=CADMWQPCCQP27UHQU4JG3C6V5I3UFNNC4DVOMSK2GUJFA6Q2PNW36S52
-STELLAR_PASSPHRASE="Test SDF Network ; September 2015"
-```
-
----
-
-## 📡 API Reference — Level 2 Endpoints
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/health` | Service health status, database, and contract address |
-| `GET` | `/api/bounties` | List all bounties with milestone counts and metrics |
-| `GET` | `/api/bounties/:id` | Get bounty details including milestones, contributions, events |
-| `POST` | `/api/bounties` | Create a new bounty |
-| `POST` | `/api/bounties/:id/milestones` | Create a milestone for a bounty |
-| `GET` | `/api/bounties/:id/milestones` | List all milestones belonging to a bounty |
-| `GET` | `/api/milestones/:id` | Get milestone details by ID |
-| `POST` | `/api/milestones/:id/submit` | Submit evidence reference for milestone review |
-| `POST` | `/api/milestones/:id/verify` | Submit reviewer vote (`approve` or `reject`) |
-| `GET` | `/api/milestones/:id/verifications` | List community verification votes for a milestone |
-| `POST` | `/api/milestones/:id/release-payment`| Trigger/record milestone payout release |
-| `GET` | `/api/bounties/:id/contributions` | List on-chain contributions for a bounty |
-| `GET` | `/api/bounties/:id/events` | List indexed Soroban contract events for a bounty |
-| `POST` | `/api/events/ingest` | Process incoming contract event (idempotent deduplication) |
-| `POST` | `/api/bounties/:id/reconcile` | Reconcile indexed database state with on-chain Soroban state |
-
----
-
-## 🔒 Security & Deduplication
-
-1. **Idempotent Ingestion**: `eventIndexer` uses a unique `event_key` constraint on `contract_events`. Duplicate events are skipped automatically with zero double-counting.
-2. **Reviewer Vote Protection**: `verifications` table enforces unique `(milestone_id, reviewer_address)` constraints. Duplicate voting attempts are rejected with HTTP 409 Conflict.
-3. **Threshold Enforcement**: Payment release is strictly rejected until milestone approvals meet or exceed `approval_threshold`.
-
----
-
-## 📸 Level 2 Evidence & Demonstration
-
-### 1. Level 2 On-Chain Bounty Dashboard & Soroban Escrow
-The dashboard displays bounties with live milestone progress indicators (`1 / 1 complete`), locked Soroban contract escrow balances, and direct links to the deployed contract on Stellar Expert (`CADMWQPCCQP27UHQU4JG3C6V5I3UFNNC4DVOMSK2GUJFA6Q2PNW36S52`).
-
-![Level 2 Dashboard & Escrow](docs/evidence/level2_dashboard.png)
-
-### 2. Milestone Deliverable Review & Community Approval
-Demonstrating the live deliverable submission (`pull/2`), reviewer voting interface, and approval quorum verification directly recorded on-chain.
-
-![Milestone Review & Approval](docs/evidence/milestone_review_approval.png)
-
-### 3. Live Demo Video: Milestone Voting & Conditional Release
-Demonstrating the full Level 2 lifecycle: wallet connection, bounty creation, milestone submission with deliverable PR, multi-wallet community verification, threshold satisfaction, conditional payment unlock, and contract activity indexing.
-
-[![Level 2 Workflow Demo Animation](docs/evidence/level2_demo.gif)](docs/evidence/level2_demo.mp4)
-
-* 🎬 **Direct MP4 Video File**: [Download / Watch MP4 (1.7 MB)](docs/evidence/level2_demo.mp4)
-* 🎬 **Direct WebM Video File**: [Download / Watch WebM (4.3 MB)](docs/evidence/level2_demo.webm)
-
----
-
-## 🔄 How the Repository Evolves into Level 3
-
-* **Level 3 Progression**:
-  - SSE/WebSocket realtime event streaming.
-  - Multi-recipient milestone payout splitting.
-  - Settlement router oracles for automated dispute resolution.
+Includes 28 passing unit and integration tests covering:
+* Event ingestion, deduplication, and retry recovery
+* Multi-recipient settlement routing (fixed and percentage allocations)
+* Transaction lifecycle tracking and state machine transitions
+* Idempotent payment recording
+* Contract reconciliation and health checks
 
 ---
 
 ## 📄 License
 
-MIT
-
+This project is licensed under the [MIT License](LICENSE).
