@@ -1,0 +1,41 @@
+{
+  "name": "stellar-bounty-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Backend API, database persistence, and Stellar Testnet transaction verification service for Stellar Bounty Treasury",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "stellar",
+    "soroban",
+    "bounties",
+    "treasury",
+    "horizon"
+  ],
+  "author": "Dev3DPrint <322404527+Dev3DPrint@users.noreply.github.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@stellar/stellar-sdk": "^13.0.0",
+    "better-sqlite3": "^11.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.13.10",
+    "@types/supertest": "^6.0.2",
+    "supertest": "^7.0.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.9"
+  }
+}

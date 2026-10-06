@@ -1,0 +1,7 @@
+node_modules/
+dist/
+data/
+tests/test_treasury.db*
+.env
+*.log
+.DS_Store
