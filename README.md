@@ -2,6 +2,8 @@
 
 The backend service, persistent database, and on-chain Stellar Testnet transaction verification engine for **Stellar Bounty Treasury**.
 
+**🌐 Live Frontend Application**: [https://stellar-bounty-treasury-2676.netlify.app](https://stellar-bounty-treasury-2676.netlify.app)
+
 ---
 
 ## 📌 What It Does — Level 2 (Yellow Belt)
