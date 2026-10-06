@@ -4,13 +4,17 @@ The backend service, persistent database, and on-chain Stellar Testnet transacti
 
 ---
 
-## 📌 What It Does
+## 📌 What It Does — Level 2 (Yellow Belt)
 
-At **Level 1 (White Belt)**, this backend provides:
-* **Persistent Bounty Storage**: Reliable SQLite storage tracking bounty specifications, creator accounts, targets, and current funding progress.
-* **On-Chain Stellar Verification**: Every incoming contribution is audited against the **Stellar Testnet** via Horizon RPC. Transactions that do not exist, failed, or have mismatched amounts/recipients are strictly rejected.
-* **Idempotency & Replay Protection**: Each transaction hash can only be registered once, preventing double-credit exploits.
-* **REST API Endpoints**: Clean JSON interface for frontend clients and future indexers.
+At **Level 2**, this backend acts as the authoritative off-chain indexing and observation layer for the **Soroban Smart Contract**:
+
+* **Contract Integration**: Integrates directly with deployed Soroban bounty contract `CADMWQPCCQP27UHQU4JG3C6V5I3UFNNC4DVOMSK2GUJFA6Q2PNW36S52` on Stellar Testnet.
+* **Event Indexing Engine**: Ingests structured Soroban contract events (`bounty_created`, `bounty_funded`, `milestone_submitted`, `milestone_approved`, `milestone_paid`).
+* **Strict Idempotency**: Guarantees zero duplicate event persistence using cryptographic event deduplication keys (`event_key`).
+* **Milestone Lifecycle Management**: Exposes milestones, submission evidence links, reviewer verifications, and conditional settlement states.
+* **State Reconciliation**: Reconciles indexed database records against authoritative on-chain contract state.
+
+> **Architectural Rule**: The contract enforces. The backend observes. The frontend orchestrates. The backend never moves funds on behalf of users.
 
 ---
 
@@ -19,20 +23,21 @@ At **Level 1 (White Belt)**, this backend provides:
 ```text
 stellar-bounty-backend/
 ├── src/
-│   ├── config.ts               # Environment variables and network configurations
+│   ├── config.ts               # Environment variables & Soroban RPC / Contract ID
 │   ├── app.ts                  # Express server, middleware, error handling
 │   ├── server.ts               # Server bootstrap & lifecycle listeners
 │   ├── db/
-│   │   └── database.ts         # SQLite schema initialization (WAL mode)
+│   │   └── database.ts         # SQLite schema (bounties, milestones, verifications, contract_events)
 │   ├── services/
 │   │   ├── stellar.ts          # Stellar Testnet Horizon verification service
-│   │   └── bountyService.ts    # Business logic, state transitions, idempotency
+│   │   ├── eventIndexer.ts     # Idempotent contract event ingestor & reconciler
+│   │   └── bountyService.ts    # Level 2 business logic, milestone transitions, verifications
 │   ├── controllers/
 │   │   └── bountyController.ts # HTTP request/response handlers
 │   └── routes/
 │       └── bountyRoutes.ts     # Express router definition
 ├── tests/
-│   └── bounties.test.ts        # Comprehensive test suite with Vitest
+│   └── bounties.test.ts        # Comprehensive test suite with Vitest (15 tests passing)
 ├── .env.example
 ├── tsconfig.json
 └── package.json
@@ -76,89 +81,61 @@ npm test
 Create `.env` based on `.env.example`:
 
 ```bash
-# Server Configuration
 PORT=5000
 NODE_ENV=development
 CORS_ORIGIN=*
-
-# Database Persistence
 DATABASE_PATH=./data/treasury.db
 
-# Stellar Network
+# Stellar & Soroban Testnet
 STELLAR_NETWORK=TESTNET
 HORIZON_URL=https://horizon-testnet.stellar.org
+SOROBAN_RPC_URL=https://soroban-testnet.stellar.org
+SOROBAN_CONTRACT_ID=CADMWQPCCQP27UHQU4JG3C6V5I3UFNNC4DVOMSK2GUJFA6Q2PNW36S52
 STELLAR_PASSPHRASE="Test SDF Network ; September 2015"
 ```
 
 ---
 
-## 👛 How to Connect a Stellar Testnet Wallet
+## 📡 API Reference — Level 2 Endpoints
 
-While the backend operates headless, it validates cryptographic Stellar addresses and transactions submitted by wallets:
-1. Contributors and creators use valid Stellar Ed25519 public keys starting with `G` (56 characters).
-2. The backend uses `@stellar/stellar-sdk`'s `StrKey.isValidEd25519PublicKey(address)` to ensure wallet addresses are authentic before persisting them.
-3. For server-to-server operations or testing, keys can be funded via Friendbot at `https://friendbot.stellar.org?addr=<PUBLIC_KEY>`.
-
----
-
-## 📝 How to Create a Bounty
-
-To create a bounty programmatically, send a `POST` request to `/api/bounties`:
-
-```bash
-curl -X POST http://localhost:5000/api/bounties \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Build Soroban Escrow Settlement Contract",
-    "description": "Implement token lockup and conditional release modules.",
-    "creator_address": "GBDOSMGJGGPBIUAORRTYPEWPO5TXTXPQC7FLAP5ZZ4XVYHTDAFBCOMRX",
-    "target_amount": 100
-  }'
-```
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/health` | Service health status, database, and contract address |
+| `GET` | `/api/bounties` | List all bounties with milestone counts and metrics |
+| `GET` | `/api/bounties/:id` | Get bounty details including milestones, contributions, events |
+| `POST` | `/api/bounties` | Create a new bounty |
+| `POST` | `/api/bounties/:id/milestones` | Create a milestone for a bounty |
+| `GET` | `/api/bounties/:id/milestones` | List all milestones belonging to a bounty |
+| `GET` | `/api/milestones/:id` | Get milestone details by ID |
+| `POST` | `/api/milestones/:id/submit` | Submit evidence reference for milestone review |
+| `POST` | `/api/milestones/:id/verify` | Submit reviewer vote (`approve` or `reject`) |
+| `GET` | `/api/milestones/:id/verifications` | List community verification votes for a milestone |
+| `POST` | `/api/milestones/:id/release-payment`| Trigger/record milestone payout release |
+| `GET` | `/api/bounties/:id/contributions` | List on-chain contributions for a bounty |
+| `GET` | `/api/bounties/:id/events` | List indexed Soroban contract events for a bounty |
+| `POST` | `/api/events/ingest` | Process incoming contract event (idempotent deduplication) |
+| `POST` | `/api/bounties/:id/reconcile` | Reconcile indexed database state with on-chain Soroban state |
 
 ---
 
-## 💸 How to Fund a Bounty
+## 🔒 Security & Deduplication
 
-To record a contribution, submit the verified on-chain Stellar transaction hash to `/api/bounties/:id/contributions`:
-
-```bash
-curl -X POST http://localhost:5000/api/bounties/1/contributions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "contributor_address": "GD6DQE75KKO6Y3SA76IXGQH2GFFUULPUTQUQ3LXIPRDJ66K2UUGDF2DN",
-    "amount": 25,
-    "transaction_hash": "d0ed248c8119390c9269b56348b6b995e7116d9cc5dc6b5cafa6111f185583f0"
-  }'
-```
+1. **Idempotent Ingestion**: `eventIndexer` uses a unique `event_key` constraint on `contract_events`. Duplicate events are skipped automatically with zero double-counting.
+2. **Reviewer Vote Protection**: `verifications` table enforces unique `(milestone_id, reviewer_address)` constraints. Duplicate voting attempts are rejected with HTTP 409 Conflict.
+3. **Threshold Enforcement**: Payment release is strictly rejected until milestone approvals meet or exceed `approval_threshold`.
 
 ---
 
-## 🔍 How to Verify a Transaction
+## 🔄 How the Repository Evolves into Level 3
 
-When `/api/bounties/:id/contributions` is invoked, the backend executes the following on-chain verification sequence:
-1. Queries Stellar Horizon Testnet (`/transactions/<transaction_hash>`).
-2. Checks that `tx.successful === true`.
-3. Inspects operations to verify that a native `payment` was made for the claimed XLM amount to the bounty creator or treasury.
-4. If verified, updates the bounty's `funded_amount` atomically inside a SQLite transaction.
-5. If the transaction does not exist or failed on-chain, returns HTTP `400 Bad Request` with the verification error reason.
-
----
-
-## 🔄 How the Repository Will Evolve in Levels 2 and 3
-
-The architecture is explicitly decoupled to enable:
-* **Level 2**:
-  - Live Stellar/Soroban contract event ingestion worker.
-  - Periodic reconciliation workers indexing Soroban events.
-  - Multi-signature milestone submission records and claim verification.
-* **Level 3**:
-  - WebSockets / Server-Sent Events (SSE) for realtime bounty updates.
-  - Conditional settlement oracle monitors.
-  - Automated payout triggers on milestone satisfaction.
+* **Level 3 Progression**:
+  - SSE/WebSocket realtime event streaming.
+  - Multi-recipient milestone payout splitting.
+  - Settlement router oracles for automated dispute resolution.
 
 ---
 
 ## 📄 License
 
 MIT
+

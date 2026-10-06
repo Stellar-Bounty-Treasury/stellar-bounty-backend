@@ -1,7 +1,7 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { config } from './config.js';
-import { bountyRouter } from './routes/bountyRoutes.js';
+import { bountyRouter, milestoneRouter, reconcileRouter } from './routes/bountyRoutes.js';
 import { healthCheck } from './controllers/bountyController.js';
 
 export function createApp(): Express {
@@ -13,8 +13,10 @@ export function createApp(): Express {
   // Health endpoint
   app.get('/health', healthCheck);
 
-  // Bounty routes
+  // API Routes
   app.use('/api/bounties', bountyRouter);
+  app.use('/api/milestones', milestoneRouter);
+  app.use('/api/reconcile', reconcileRouter);
 
   // 404 handler
   app.use((req: Request, res: Response) => {
