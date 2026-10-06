@@ -4,7 +4,7 @@ The backend service, persistent database, and on-chain Stellar Testnet transacti
 
 ---
 
-## 📌 Project Overview
+## 📌 What It Does
 
 At **Level 1 (White Belt)**, this backend provides:
 * **Persistent Bounty Storage**: Reliable SQLite storage tracking bounty specifications, creator accounts, targets, and current funding progress.
@@ -40,84 +40,7 @@ stellar-bounty-backend/
 
 ---
 
-## 📡 API Specification
-
-### 1. Health Check
-* **`GET /health`**
-* **Response**:
-```json
-{
-  "status": "healthy",
-  "timestamp": "2026-10-06T18:48:54.000Z",
-  "network": "TESTNET",
-  "horizonUrl": "https://horizon-testnet.stellar.org",
-  "database": "connected",
-  "version": "1.0.0"
-}
-```
-
-### 2. Create Bounty
-* **`POST /api/bounties`**
-* **Request Body**:
-```json
-{
-  "title": "Fix Stellar SDK Documentation Bug",
-  "description": "Resolve outdated examples in the JavaScript SDK README",
-  "creator_address": "GBSVC3MFSXVVYNUP6MUNDSM37G4ED5JACUSG3OLDSPBOYIYM6XGL4OAB",
-  "target_amount": 100
-}
-```
-* **Response**: `201 Created` with bounty metadata.
-
-### 3. List Bounties
-* **`GET /api/bounties`**
-* Returns all bounties ordered by newest first.
-
-### 4. Retrieve Bounty Details
-* **`GET /api/bounties/:id`**
-* Returns bounty metadata including list of all associated contributions.
-
-### 5. Record & Verify Contribution
-* **`POST /api/bounties/:id/contributions`**
-* **Request Body**:
-```json
-{
-  "contributor_address": "GBYM3U4FTGGKTUDY2SWY2WKJYSUSHDZKVMUQKSCO5RH2IEN3X7RUNGTU",
-  "amount": 25,
-  "transaction_hash": "a8f4b2c1d3e5f7a9b0c2d4e6f8a1b3c5d7e9f0a2b4c6d8e1f3a5b7c9d0e2f4a6"
-}
-```
-* **Process**:
-  1. Validates bounty exists and is in `open` state.
-  2. Ensures `transaction_hash` has not been previously recorded.
-  3. Verifies transaction directly on Stellar Testnet via Horizon:
-     - Confirms transaction was successful.
-     - Confirms payment operation destination and amount.
-  4. Atomically increments bounty's `funded_amount`.
-  5. Updates status to `funded` if target reached.
-
-### 6. List Contributions for a Bounty
-* **`GET /api/bounties/:id/contributions`**
-
----
-
-## ⚙️ Environment Variables
-
-Create `.env` using `.env.example`:
-
-```bash
-PORT=5000
-NODE_ENV=development
-CORS_ORIGIN=*
-DATABASE_PATH=./data/treasury.db
-STELLAR_NETWORK=TESTNET
-HORIZON_URL=https://horizon-testnet.stellar.org
-STELLAR_PASSPHRASE="Test SDF Network ; September 2015"
-```
-
----
-
-## 🚀 Running the Backend
+## 🚀 How to Run It
 
 ### Installation
 
@@ -130,6 +53,8 @@ npm install
 ```bash
 npm run dev
 ```
+
+The server listens on `http://localhost:5000`.
 
 ### Production Build & Run
 
@@ -146,13 +71,87 @@ npm test
 
 ---
 
-## 🔄 Progression to Level 2 and Level 3
+## ⚙️ Required Environment Variables
+
+Create `.env` based on `.env.example`:
+
+```bash
+# Server Configuration
+PORT=5000
+NODE_ENV=development
+CORS_ORIGIN=*
+
+# Database Persistence
+DATABASE_PATH=./data/treasury.db
+
+# Stellar Network
+STELLAR_NETWORK=TESTNET
+HORIZON_URL=https://horizon-testnet.stellar.org
+STELLAR_PASSPHRASE="Test SDF Network ; September 2015"
+```
+
+---
+
+## 👛 How to Connect a Stellar Testnet Wallet
+
+While the backend operates headless, it validates cryptographic Stellar addresses and transactions submitted by wallets:
+1. Contributors and creators use valid Stellar Ed25519 public keys starting with `G` (56 characters).
+2. The backend uses `@stellar/stellar-sdk`'s `StrKey.isValidEd25519PublicKey(address)` to ensure wallet addresses are authentic before persisting them.
+3. For server-to-server operations or testing, keys can be funded via Friendbot at `https://friendbot.stellar.org?addr=<PUBLIC_KEY>`.
+
+---
+
+## 📝 How to Create a Bounty
+
+To create a bounty programmatically, send a `POST` request to `/api/bounties`:
+
+```bash
+curl -X POST http://localhost:5000/api/bounties \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Build Soroban Escrow Settlement Contract",
+    "description": "Implement token lockup and conditional release modules.",
+    "creator_address": "GBDOSMGJGGPBIUAORRTYPEWPO5TXTXPQC7FLAP5ZZ4XVYHTDAFBCOMRX",
+    "target_amount": 100
+  }'
+```
+
+---
+
+## 💸 How to Fund a Bounty
+
+To record a contribution, submit the verified on-chain Stellar transaction hash to `/api/bounties/:id/contributions`:
+
+```bash
+curl -X POST http://localhost:5000/api/bounties/1/contributions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contributor_address": "GD6DQE75KKO6Y3SA76IXGQH2GFFUULPUTQUQ3LXIPRDJ66K2UUGDF2DN",
+    "amount": 25,
+    "transaction_hash": "d0ed248c8119390c9269b56348b6b995e7116d9cc5dc6b5cafa6111f185583f0"
+  }'
+```
+
+---
+
+## 🔍 How to Verify a Transaction
+
+When `/api/bounties/:id/contributions` is invoked, the backend executes the following on-chain verification sequence:
+1. Queries Stellar Horizon Testnet (`/transactions/<transaction_hash>`).
+2. Checks that `tx.successful === true`.
+3. Inspects operations to verify that a native `payment` was made for the claimed XLM amount to the bounty creator or treasury.
+4. If verified, updates the bounty's `funded_amount` atomically inside a SQLite transaction.
+5. If the transaction does not exist or failed on-chain, returns HTTP `400 Bad Request` with the verification error reason.
+
+---
+
+## 🔄 How the Repository Will Evolve in Levels 2 and 3
 
 The architecture is explicitly decoupled to enable:
 * **Level 2**:
-  - Live Stellar/Soroban contract event ingestion.
+  - Live Stellar/Soroban contract event ingestion worker.
   - Periodic reconciliation workers indexing Soroban events.
-  - Multi-signature milestone submission records.
+  - Multi-signature milestone submission records and claim verification.
 * **Level 3**:
   - WebSockets / Server-Sent Events (SSE) for realtime bounty updates.
   - Conditional settlement oracle monitors.
