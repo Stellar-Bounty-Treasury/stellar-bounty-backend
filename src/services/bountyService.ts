@@ -321,7 +321,7 @@ export class BountyService {
     return result();
   }
 
-  // --- Level 3 Settlement Router ---
+  // --- Programmable Settlement Router ---
 
   public configureSettlement(
     bountyId: number,

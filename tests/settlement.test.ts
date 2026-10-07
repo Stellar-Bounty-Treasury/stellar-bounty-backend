@@ -5,9 +5,9 @@ import { getDatabase, closeDatabase } from '../src/db/database.js';
 import fs from 'fs';
 import path from 'path';
 
-describe('Stellar Bounty Treasury Backend API — Level 3 (Orange Belt) Suite', () => {
+describe('Stellar Bounty Treasury Backend API — Programmable Settlement Router Suite', () => {
   let app: any;
-  const testDbPath = path.join(process.cwd(), 'data', 'test_level3.sqlite');
+  const testDbPath = path.join(process.cwd(), 'data', 'test_settlement.sqlite');
 
   const creator = 'GCJ2ZWBIPSHBATSPIB45PZIB3QLI5HT6EURUSAO6WSTNFVQSSMDRQ2XE';
   const funder = 'GAR2BSQ6MU46AT7JUCD5TIK3E5BYRVRUUVBPYDJAP3OALCT24NV3EPPV';
@@ -58,7 +58,7 @@ describe('Stellar Bounty Treasury Backend API — Level 3 (Orange Belt) Suite', 
         .post('/api/bounties')
         .send({
           title: 'Settlement Router Engine',
-          description: 'Level 3 Programmable Treasury Router',
+          description: 'Production Programmable Treasury Router',
           creator_address: creator,
           target_amount: 1000,
         });

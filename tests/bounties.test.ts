@@ -7,9 +7,9 @@ import { getDatabase, closeDatabase } from '../src/db/database.js';
 import { stellarService } from '../src/services/stellar.js';
 import { eventIndexer } from '../src/services/eventIndexer.js';
 
-const TEST_DB = path.resolve(process.cwd(), 'tests', 'test_treasury_l2.db');
+const TEST_DB = path.resolve(process.cwd(), 'tests', 'test_treasury.db');
 
-describe('Stellar Bounty Treasury Backend API — Level 2 Suite', () => {
+describe('Stellar Bounty Treasury Backend API — Core Escrow & Milestones Suite', () => {
   const validCreator = 'GBSVC3MFSXVVYNUP6MUNDSM37G4ED5JACUSG3OLDSPBOYIYM6XGL4OAB';
   const validContributor = 'GBYM3U4FTGGKTUDY2SWY2WKJYSUSHDZKVMUQKSCO5RH2IEN3X7RUNGTU';
   const validReviewer1 = 'GD6DQE75KKO6Y3SA76IXGQH2GFFUULPUTQUQ3LXIPRDJ66K2UUGDF2DN';
@@ -68,7 +68,7 @@ describe('Stellar Bounty Treasury Backend API — Level 2 Suite', () => {
     });
   });
 
-  describe('Level 2 Milestones Lifecycle & Verification', () => {
+  describe('Milestones Lifecycle & Community Verification', () => {
     it('creates a milestone on the bounty', async () => {
       const res = await request(app)
         .post('/api/bounties/1/milestones')

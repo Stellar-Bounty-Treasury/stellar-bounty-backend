@@ -215,7 +215,7 @@ export async function verifyMilestone(req: Request, res: Response): Promise<void
   }
 }
 
-// --- Level 3 Settlement Router Handlers ---
+// --- Programmable Settlement Router Handlers ---
 
 export async function configureSettlement(req: Request, res: Response): Promise<void> {
   try {

@@ -19,11 +19,35 @@ The backend never acts as an authority for payment authorization. It continuousl
 
 ## 🎬 Product Demonstration
 
-![Stellar Bounty Treasury Walkthrough](docs/evidence/level3_demo.gif)
+![Stellar Bounty Treasury Walkthrough](docs/evidence/treasury_demo.gif)
 
-* **Direct Video Links**: [High-Definition MP4](docs/evidence/level3_demo.mp4) • [WebM Video](docs/evidence/level3_demo.webm)
+* **Direct Video Links**: [High-Definition MP4](docs/evidence/treasury_demo.mp4) • [WebM Video](docs/evidence/treasury_demo.webm)
 * **Frontend Web Application**: [https://stellar-bounty-treasury-2676.netlify.app](https://stellar-bounty-treasury-2676.netlify.app)
 * **Smart Contract ID**: [`CADMWQPCCQP27UHQU4JG3C6V5I3UFNNC4DVOMSK2GUJFA6Q2PNW36S52`](https://stellar.expert/explorer/testnet/contract/CADMWQPCCQP27UHQU4JG3C6V5I3UFNNC4DVOMSK2GUJFA6Q2PNW36S52)
+
+---
+
+## 📸 Product Interface & Functionality Walkthrough
+
+### 1. Treasury Telemetry & Live Event Synchronization
+The platform frontend synchronizes with backend Server-Sent Events (`GET /api/events/stream`) and REST endpoints to render up-to-the-minute treasury metrics and bounty activity.
+![Treasury Dashboard & Telemetry](docs/screenshots/01_treasury_dashboard.png)
+
+### 2. Programmable Bounty Ingestion & Escrow Indexing
+New bounties and contribution events are automatically ingested, validated, and indexed with cryptographic deduplication signatures.
+![Create Programmable Bounty](docs/screenshots/02_create_bounty_modal.png)
+
+### 3. Milestone Governance & Work Verification Ingestion
+Verifiers record verification votes and submissions, updating local relational projections and emitting state change alerts.
+![Milestone Governance & Work Verification](docs/screenshots/03_milestone_governance.png)
+
+### 4. Settlement Router Configuration & Validation
+The backend validates recipient splits, ensuring fixed sum reconciliation or 10,000 basis points arithmetic integrity.
+![Settlement Router Configuration](docs/screenshots/04_settlement_router_builder.png)
+
+### 5. Settlement Execution Tracking & On-Chain Reconciliation
+Monitors transaction lifecycle states (`DETECTED` ➔ `SUBMITTED` ➔ `CONFIRMED` ➔ `INDEXED`) with periodic authoritative contract state reconciliation.
+![Pre-Flight Settlement Preview](docs/screenshots/05_settlement_execution_preview.png)
 
 ---
 
