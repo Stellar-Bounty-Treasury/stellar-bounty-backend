@@ -194,6 +194,9 @@ Includes 28 passing unit and integration tests covering:
 
 ---
 
-## 📄 License
+## 🤝 Community, Contributing & Governance
 
-This project is licensed under the [MIT License](LICENSE).
+* **Contributing Guidelines:** Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting pull requests.
+* **Code of Conduct:** Community interactions are governed by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+* **Security Policy:** To report vulnerabilities responsibly, review [SECURITY.md](SECURITY.md).
+* **License:** This project is licensed under the [MIT License](LICENSE).
