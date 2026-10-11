@@ -66,6 +66,31 @@ describe('Stellar Bounty Treasury Backend API — Core Escrow & Milestones Suite
       expect(Array.isArray(res.body.data.milestones)).toBe(true);
       expect(res.body.data.milestones.length).toBe(0);
     });
+
+    it('fetches bounties created by a valid wallet', async () => {
+      const res = await request(app).get(`/api/bounties/creator/${validCreator}`);
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(Array.isArray(res.body.data)).toBe(true);
+      expect(res.body.count).toBe(1);
+      expect(res.body.data[0].creator_address).toBe(validCreator);
+    });
+
+    it('returns empty array when creator has no bounties', async () => {
+      const res = await request(app).get(`/api/bounties/creator/${validContributor}`);
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(Array.isArray(res.body.data)).toBe(true);
+      expect(res.body.count).toBe(0);
+      expect(res.body.data.length).toBe(0);
+    });
+
+    it('rejects invalid Stellar wallet address format with 400', async () => {
+      const res = await request(app).get('/api/bounties/creator/invalid-wallet-123');
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toBe('Invalid Stellar wallet address');
+    });
   });
 
   describe('Milestones Lifecycle & Community Verification', () => {

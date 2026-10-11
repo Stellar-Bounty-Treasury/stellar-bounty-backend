@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   createBounty,
   listBounties,
+  getBountiesByCreator,
   getBounty,
   recordContribution,
   getContributions,
@@ -33,6 +34,7 @@ bountyRouter.get('/stats', getTreasuryStats);
 // Bounty Core Routes
 bountyRouter.post('/', createBounty);
 bountyRouter.get('/', listBounties);
+bountyRouter.get('/creator/:wallet', getBountiesByCreator);
 bountyRouter.get('/:id', getBounty);
 bountyRouter.post('/:id/contributions', recordContribution);
 bountyRouter.get('/:id/contributions', getContributions);

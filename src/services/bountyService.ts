@@ -154,6 +154,12 @@ export class BountyService {
     return stmt.all() as Bounty[];
   }
 
+  public getBountiesByCreator(creatorAddress: string): Bounty[] {
+    const db = getDatabase();
+    const stmt = db.prepare(`SELECT * FROM bounties WHERE creator_address = ? ORDER BY id DESC`);
+    return stmt.all(creatorAddress) as Bounty[];
+  }
+
   public getBountyById(id: number): Bounty | null {
     const db = getDatabase();
     const stmt = db.prepare(`SELECT * FROM bounties WHERE id = ?`);
