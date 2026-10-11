@@ -128,6 +128,7 @@ function initSchema(db: Database.Database): void {
     );
 
     CREATE INDEX IF NOT EXISTS idx_bounties_status ON bounties(status);
+    CREATE INDEX IF NOT EXISTS idx_bounties_creator_address ON bounties(creator_address);
     CREATE INDEX IF NOT EXISTS idx_milestones_bounty ON milestones(bounty_id);
     CREATE INDEX IF NOT EXISTS idx_contributions_bounty ON contributions(bounty_id);
     CREATE INDEX IF NOT EXISTS idx_verifications_milestone ON verifications(milestone_id);

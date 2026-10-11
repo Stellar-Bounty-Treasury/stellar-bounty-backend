@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { bountyService } from '../services/bountyService.js';
+import { stellarService } from '../services/stellar.js';
 import { eventIndexer } from '../services/eventIndexer.js';
 import { realtimeService } from '../services/realtimeService.js';
 import { getDatabase } from '../db/database.js';
@@ -40,6 +41,33 @@ export async function listBounties(req: Request, res: Response): Promise<void> {
     res.status(500).json({
       success: false,
       error: err.message || 'Failed to retrieve bounties',
+    });
+  }
+}
+
+export async function getBountiesByCreator(req: Request, res: Response): Promise<void> {
+  try {
+    const rawWallet = Array.isArray(req.params.wallet) ? req.params.wallet[0] : req.params.wallet;
+    const wallet = String(rawWallet || '').trim();
+
+    if (!stellarService.isValidAddress(wallet)) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid Stellar wallet address',
+      });
+      return;
+    }
+
+    const bounties = bountyService.getBountiesByCreator(wallet);
+    res.status(200).json({
+      success: true,
+      data: bounties,
+      count: bounties.length,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      error: err.message || 'Internal server error',
     });
   }
 }
