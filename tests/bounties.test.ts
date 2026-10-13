@@ -66,6 +66,48 @@ describe('Stellar Bounty Treasury Backend API — Core Escrow & Milestones Suite
       expect(Array.isArray(res.body.data.milestones)).toBe(true);
       expect(res.body.data.milestones.length).toBe(0);
     });
+
+    it('filters bounties by status case-insensitively', async () => {
+      // Create a second bounty to test multiple items
+      await request(app)
+        .post('/api/bounties')
+        .send({
+          title: 'Second Bounty For Status Filter Test',
+          description: 'Testing status filtering',
+          creator_address: validCreator,
+          target_amount: 500,
+        });
+
+      // Filter by open (lowercase)
+      const resOpen = await request(app).get('/api/bounties?status=open');
+      expect(resOpen.status).toBe(200);
+      expect(resOpen.body.success).toBe(true);
+      expect(resOpen.body.data.length).toBeGreaterThanOrEqual(2);
+      expect(resOpen.body.data.every((b: any) => b.status === 'open')).toBe(true);
+
+      // Filter by OPEN (uppercase case-insensitive)
+      const resUpper = await request(app).get('/api/bounties?status=OPEN');
+      expect(resUpper.status).toBe(200);
+      expect(resUpper.body.data.length).toBe(resOpen.body.data.length);
+      expect(resUpper.body.data.every((b: any) => b.status === 'open')).toBe(true);
+
+      // Filter by all returns everything
+      const resAll = await request(app).get('/api/bounties?status=all');
+      expect(resAll.status).toBe(200);
+      expect(resAll.body.data.length).toBeGreaterThanOrEqual(2);
+
+      // Filter by completed returns empty when none are completed
+      const resCompleted = await request(app).get('/api/bounties?status=completed');
+      expect(resCompleted.status).toBe(200);
+      expect(resCompleted.body.data.length).toBe(0);
+      expect(resCompleted.body.count).toBe(0);
+
+      // Filter by nonexistent status returns empty array
+      const resNone = await request(app).get('/api/bounties?status=nonexistent_status');
+      expect(resNone.status).toBe(200);
+      expect(resNone.body.data.length).toBe(0);
+      expect(resNone.body.count).toBe(0);
+    });
   });
 
   describe('Milestones Lifecycle & Community Verification', () => {
