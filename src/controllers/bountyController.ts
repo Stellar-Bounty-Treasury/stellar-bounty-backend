@@ -30,7 +30,9 @@ export async function createBounty(req: Request, res: Response): Promise<void> {
 
 export async function listBounties(req: Request, res: Response): Promise<void> {
   try {
-    const bounties = bountyService.listBounties();
+    const rawStatus = typeof req.query.status === 'string' ? req.query.status.trim() : undefined;
+    const status = rawStatus && rawStatus.toLowerCase() !== 'all' ? rawStatus : undefined;
+    const bounties = bountyService.listBounties(status);
     res.status(200).json({
       success: true,
       data: bounties,

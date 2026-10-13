@@ -12,7 +12,7 @@ export interface Bounty {
   creator_address: string;
   target_amount: number;
   funded_amount: number;
-  status: 'open' | 'funded' | 'completed' | 'cancelled';
+  status: 'open' | 'funded' | 'completed' | 'cancelled' | 'refunded' | 'expired';
   created_at: string;
   updated_at: string;
 }
@@ -148,8 +148,12 @@ export class BountyService {
     return bounty;
   }
 
-  public listBounties(): Bounty[] {
+  public listBounties(status?: string): Bounty[] {
     const db = getDatabase();
+    if (status && status.trim().length > 0) {
+      const stmt = db.prepare(`SELECT * FROM bounties WHERE LOWER(status) = LOWER(?) ORDER BY id DESC`);
+      return stmt.all(status.trim()) as Bounty[];
+    }
     const stmt = db.prepare(`SELECT * FROM bounties ORDER BY id DESC`);
     return stmt.all() as Bounty[];
   }
