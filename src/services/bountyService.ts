@@ -33,6 +33,16 @@ export interface Milestone {
   updated_at: string;
 }
 
+export interface MilestoneProofAttachment {
+  id: number;
+  milestone_id: number;
+  filename: string;
+  mime_type: string;
+  file_size: number;
+  file_data?: string;
+  created_at: string;
+}
+
 export interface Contribution {
   id: number;
   bounty_id: number;
@@ -724,6 +734,46 @@ export class BountyService {
     const db = getDatabase();
     const stmt = db.prepare(`SELECT * FROM contributions WHERE bounty_id = ? ORDER BY id DESC`);
     return stmt.all(bountyId) as Contribution[];
+  }
+
+  public addMilestoneProofAttachment(
+    milestoneId: number,
+    filename: string,
+    mimeType: string,
+    fileSize: number,
+    fileDataBase64: string
+  ): MilestoneProofAttachment {
+    const milestone = this.getMilestoneById(milestoneId);
+    if (!milestone) throw new Error(`Milestone ${milestoneId} not found.`);
+
+    const db = getDatabase();
+    const now = new Date().toISOString();
+    const info = db.prepare(`
+      INSERT INTO milestone_proof_attachments (milestone_id, filename, mime_type, file_size, file_data, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(milestoneId, filename, mimeType, fileSize, fileDataBase64, now);
+
+    return {
+      id: info.lastInsertRowid as number,
+      milestone_id: milestoneId,
+      filename,
+      mime_type: mimeType,
+      file_size: fileSize,
+      created_at: now,
+    };
+  }
+
+  public getMilestoneProofAttachments(milestoneId: number): MilestoneProofAttachment[] {
+    const milestone = this.getMilestoneById(milestoneId);
+    if (!milestone) throw new Error(`Milestone ${milestoneId} not found.`);
+
+    const db = getDatabase();
+    return db.prepare(`
+      SELECT id, milestone_id, filename, mime_type, file_size, created_at
+      FROM milestone_proof_attachments
+      WHERE milestone_id = ?
+      ORDER BY id ASC
+    `).all(milestoneId) as MilestoneProofAttachment[];
   }
 }
 
