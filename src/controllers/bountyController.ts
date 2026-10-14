@@ -4,6 +4,7 @@ import { eventIndexer } from '../services/eventIndexer.js';
 import { realtimeService } from '../services/realtimeService.js';
 import { getDatabase } from '../db/database.js';
 import { config } from '../config.js';
+import { validateProofFile } from '../middleware/fileValidation.js';
 
 export async function createBounty(req: Request, res: Response): Promise<void> {
   try {
@@ -171,22 +172,108 @@ export async function submitMilestone(req: Request, res: Response): Promise<void
   try {
     const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const id = parseInt(String(rawId), 10);
-    const { submission_reference, tx_hash } = req.body;
+    const { submission_reference, tx_hash, attachment, attachments } = req.body;
 
     if (!submission_reference) {
       res.status(400).json({ success: false, error: 'Submission reference (PR / CID) is required.' });
       return;
     }
 
+    const itemsToProcess = attachments || (attachment ? [attachment] : []);
+    const validatedAttachments = [];
+    for (const item of itemsToProcess) {
+      if (!item.mime_type || !item.data) {
+        res.status(400).json({
+          success: false,
+          error: 'MIME type and base64 data are required for proof attachments.',
+        });
+        return;
+      }
+      const buffer = Buffer.from(item.data, 'base64');
+      const validated = validateProofFile(item.mime_type, buffer, item.filename);
+      validatedAttachments.push({ ...validated, data: item.data });
+    }
+
     const milestone = bountyService.submitMilestone(id, submission_reference, tx_hash);
+
+    const savedAttachments = [];
+    for (const att of validatedAttachments) {
+      const saved = bountyService.addMilestoneProofAttachment(
+        id,
+        att.filename,
+        att.mime_type,
+        att.size,
+        att.data
+      );
+      savedAttachments.push(saved);
+    }
+
     res.status(200).json({
       success: true,
-      data: milestone,
+      data: {
+        ...milestone,
+        attachments: savedAttachments,
+      },
     });
   } catch (err: any) {
     res.status(400).json({
       success: false,
       error: err.message || 'Failed to submit milestone',
+    });
+  }
+}
+
+export async function uploadMilestoneProof(req: Request, res: Response): Promise<void> {
+  try {
+    const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const id = parseInt(String(rawId), 10);
+    const { filename, mime_type, data } = req.body;
+
+    if (!mime_type) {
+      res.status(400).json({ success: false, error: 'MIME type is required.' });
+      return;
+    }
+    if (!data) {
+      res.status(400).json({ success: false, error: 'Base64 file data is required.' });
+      return;
+    }
+
+    const buffer = Buffer.from(data, 'base64');
+    const validated = validateProofFile(mime_type, buffer, filename);
+
+    const attachment = bountyService.addMilestoneProofAttachment(
+      id,
+      validated.filename,
+      validated.mime_type,
+      validated.size,
+      data
+    );
+
+    res.status(201).json({
+      success: true,
+      data: attachment,
+    });
+  } catch (err: any) {
+    res.status(400).json({
+      success: false,
+      error: err.message || 'Failed to upload proof attachment.',
+    });
+  }
+}
+
+export async function getMilestoneProof(req: Request, res: Response): Promise<void> {
+  try {
+    const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const id = parseInt(String(rawId), 10);
+    const attachments = bountyService.getMilestoneProofAttachments(id);
+    res.status(200).json({
+      success: true,
+      data: attachments,
+    });
+  } catch (err: any) {
+    res.status(400).json({
+      success: false,
+      error: err.message || 'Failed to retrieve proof attachments.',
     });
   }
 }

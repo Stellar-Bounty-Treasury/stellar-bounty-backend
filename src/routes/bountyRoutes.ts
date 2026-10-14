@@ -23,6 +23,8 @@ import {
   getTreasuryStats,
   streamEvents,
   reconcile,
+  uploadMilestoneProof,
+  getMilestoneProof,
 } from '../controllers/bountyController.js';
 
 export const bountyRouter = Router();
@@ -48,6 +50,8 @@ bountyRouter.get('/:id/events', getBountyEvents);
 export const milestoneRouter = Router();
 milestoneRouter.get('/:id', getMilestone);
 milestoneRouter.post('/:id/submit', submitMilestone);
+milestoneRouter.post('/:id/proof', uploadMilestoneProof);
+milestoneRouter.get('/:id/proof', getMilestoneProof);
 milestoneRouter.post('/:id/verify', verifyMilestone);
 milestoneRouter.post('/:id/release', releasePayment);
 milestoneRouter.get('/:id/verifications', getVerifications);

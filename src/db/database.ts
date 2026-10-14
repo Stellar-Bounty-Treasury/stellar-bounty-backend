@@ -64,6 +64,17 @@ function initSchema(db: Database.Database): void {
       UNIQUE(bounty_id, contract_milestone_id)
     );
 
+    CREATE TABLE IF NOT EXISTS milestone_proof_attachments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      milestone_id INTEGER NOT NULL,
+      filename TEXT NOT NULL,
+      mime_type TEXT NOT NULL,
+      file_size INTEGER NOT NULL,
+      file_data TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (milestone_id) REFERENCES milestones(id) ON DELETE CASCADE
+    );
+
     CREATE TABLE IF NOT EXISTS contributions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       bounty_id INTEGER NOT NULL,
@@ -129,6 +140,7 @@ function initSchema(db: Database.Database): void {
 
     CREATE INDEX IF NOT EXISTS idx_bounties_status ON bounties(status);
     CREATE INDEX IF NOT EXISTS idx_milestones_bounty ON milestones(bounty_id);
+    CREATE INDEX IF NOT EXISTS idx_proof_attachments_milestone ON milestone_proof_attachments(milestone_id);
     CREATE INDEX IF NOT EXISTS idx_contributions_bounty ON contributions(bounty_id);
     CREATE INDEX IF NOT EXISTS idx_verifications_milestone ON verifications(milestone_id);
     CREATE INDEX IF NOT EXISTS idx_settlements_bounty ON settlements(bounty_id);
