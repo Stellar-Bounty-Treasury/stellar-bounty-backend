@@ -361,8 +361,8 @@ export class BountyService {
         totalAllocated += item.amount;
       } else {
         const bps = item.percentage_bps || 0;
-        if (bps <= 0 || bps > 10000) {
-          throw new Error(`Percentage allocation basis points must be between 1 and 10000.`);
+        if (!Number.isInteger(bps) || bps <= 0 || bps > 10000) {
+          throw new Error(`Percentage allocation basis points must be whole basis points between 1 and 10000.`);
         }
         totalBps += bps;
       }
@@ -377,10 +377,24 @@ export class BountyService {
       if (totalBps !== 10000) {
         throw new Error(`Total percentage basis points (${totalBps}) must equal exactly 10000 (100%).`);
       }
-      // Compute amounts
-      data.recipients = data.recipients.map((r) => ({
+      // Compute amounts in stroops with the same integer arithmetic as the
+      // on-chain settlement router (stellar-bounty-contracts
+      // `configure_settlement`, AllocationType::Percentage): each share is
+      // floor(reward_stroops * bps / 10_000) and the rounding remainder is
+      // credited to the first recipient, so the shares always sum back to the
+      // milestone reward exactly — no stroop is created or lost.
+      const rewardStroops = BigInt(Math.round(milestone.reward_amount * 10000000));
+      const shareStroops = data.recipients.map(
+        (r) => (rewardStroops * BigInt(r.percentage_bps || 0)) / 10000n
+      );
+      const allocatedStroops = shareStroops.reduce((sum, share) => sum + share, 0n);
+      const remainderStroops = rewardStroops - allocatedStroops;
+      if (remainderStroops > 0n && shareStroops.length > 0) {
+        shareStroops[0] += remainderStroops;
+      }
+      data.recipients = data.recipients.map((r, i) => ({
         ...r,
-        amount: Math.round(((milestone.reward_amount * (r.percentage_bps || 0)) / 10000) * 10000000) / 10000000,
+        amount: Number(shareStroops[i]) / 10000000,
       }));
     }
 
