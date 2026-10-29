@@ -182,6 +182,26 @@ function initSchema(db: DatabaseSync): void {
       created_at TEXT NOT NULL
     );
 
+
+    CREATE TABLE IF NOT EXISTS disputes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      bounty_id INTEGER NOT NULL,
+      milestone_id INTEGER NOT NULL,
+      initiator_address TEXT NOT NULL,
+      reason TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active',
+      resolution TEXT,
+      arbitrator_address TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (bounty_id) REFERENCES bounties(id) ON DELETE CASCADE,
+      FOREIGN KEY (milestone_id) REFERENCES milestones(id) ON DELETE CASCADE,
+      UNIQUE(bounty_id, milestone_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_disputes_bounty ON disputes(bounty_id);
+    CREATE INDEX IF NOT EXISTS idx_disputes_status ON disputes(status);
+
     CREATE INDEX IF NOT EXISTS idx_bounties_status ON bounties(status);
     CREATE INDEX IF NOT EXISTS idx_milestones_bounty ON milestones(bounty_id);
     CREATE INDEX IF NOT EXISTS idx_contributions_bounty ON contributions(bounty_id);
