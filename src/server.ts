@@ -26,3 +26,20 @@ process.on('SIGINT', () => {
     console.log('Server interrupted gracefully.');
   });
 });
+
+
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received: closing HTTP server and database...');
+  import('./db/database.js').then(({ closeDatabase }) => {
+    closeDatabase();
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received: exiting...');
+  import('./db/database.js').then(({ closeDatabase }) => {
+    closeDatabase();
+    process.exit(0);
+  });
+});
