@@ -10,6 +10,7 @@ import {
   reconcileRouter,
 } from './routes/bountyRoutes.js';
 import { healthCheck, readyCheck } from './controllers/bountyController.js';
+import { metricsService } from './services/metricsService.js';
 import { rateLimiter } from './middleware/rateLimiter.js';
 import { requestIdMiddleware } from './middleware/requestId.js';
 import { sanitizeMiddleware } from './middleware/sanitize.js';
@@ -22,6 +23,10 @@ export function createApp(): Express {
   app.use(cors({ origin: config.corsOrigin }));
   app.use(express.json());
   app.use(structuredLogger);
+  app.use((_req, _res, next) => {
+    metricsService.incRequests();
+    next();
+  });
   app.use(requestIdMiddleware);
   app.use(sanitizeMiddleware);
   app.use(rateLimiter);
@@ -30,6 +35,9 @@ export function createApp(): Express {
   // Health and Readiness checks
   app.get('/health', healthCheck);
   app.get('/ready', readyCheck);
+  app.get('/metrics', (_req, res) => {
+    res.setHeader('Content-Type', 'text/plain; version=0.0.4').send(metricsService.getMetricsText());
+  });
 
   // API Routes
   app.use('/api/bounties', bountyRouter);
