@@ -1,3 +1,4 @@
+import { sorobanRpcService } from '../services/sorobanRpcService.js';
 import { Request, Response } from 'express';
 import { bountyService } from '../services/bountyService.js';
 import { eventIndexer } from '../services/eventIndexer.js';
@@ -729,6 +730,21 @@ export async function getTimelineStatsHandler(_req: Request, res: Response): Pro
   try {
     const timeline = bountyService.getFundingTimeline();
     res.status(200).json({ success: true, data: timeline });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
+
+
+export async function simulateTransactionHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const { tx } = req.body;
+    if (!tx) {
+      res.status(400).json({ success: false, error: 'Transaction envelope (tx) is required' });
+      return;
+    }
+    const result = await sorobanRpcService.simulateTransaction(tx);
+    res.status(200).json({ success: true, data: result });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
