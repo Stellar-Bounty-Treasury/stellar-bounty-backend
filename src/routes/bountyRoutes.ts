@@ -23,6 +23,9 @@ import {
   getTreasuryStats,
   streamEvents,
   reconcile,
+  fileDisputeHandler,
+  getDisputeHandler,
+  resolveDisputeHandler,
 } from '../controllers/bountyController.js';
 
 export const bountyRouter = Router();
@@ -43,6 +46,9 @@ bountyRouter.get('/:id/settlements', getSettlements);
 bountyRouter.post('/:id/refund', refundBounty);
 bountyRouter.post('/:id/complete', completeBounty);
 bountyRouter.get('/:id/events', getBountyEvents);
+bountyRouter.post('/:id/milestones/:mId/dispute', fileDisputeHandler);
+bountyRouter.get('/:id/milestones/:mId/dispute', getDisputeHandler);
+bountyRouter.post('/:id/milestones/:mId/dispute/resolve', resolveDisputeHandler);
 
 // Global Milestones router
 export const milestoneRouter = Router();
