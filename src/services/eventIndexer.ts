@@ -244,6 +244,21 @@ export class EventIndexerService {
   /**
    * Reconcile local database state with on-chain Soroban contract state.
    */
+
+  public saveCursor(cursor: string): void {
+    const db = getDatabase();
+    db.prepare(`
+      INSERT OR REPLACE INTO indexer_cursors (indexer_name, cursor, updated_at)
+      VALUES ('soroban_events', ?, ?)
+    `).run(cursor, new Date().toISOString());
+  }
+
+  public getSavedCursor(): string | null {
+    const db = getDatabase();
+    const row = db.prepare("SELECT cursor FROM indexer_cursors WHERE indexer_name = 'soroban_events'").get() as { cursor: string } | undefined;
+    return row ? row.cursor : null;
+  }
+
   public reconcileBounty(bountyId: number): {
     reconciled: boolean;
     bountyId: number;
