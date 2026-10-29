@@ -744,6 +744,73 @@ export class BountyService {
     return recordTransaction();
   }
 
+
+  public fileDispute(bountyId: number, milestoneId: number, data: FileDisputeDTO): Dispute {
+    const db = getDatabase();
+    const milestone = this.getMilestoneById(milestoneId);
+    if (!milestone || milestone.bounty_id !== bountyId) {
+      throw new Error(`Milestone ${milestoneId} not found in bounty ${bountyId}.`);
+    }
+
+    if (milestone.status === 'paid') {
+      throw new Error('Cannot dispute an already paid milestone.');
+    }
+
+    const now = new Date().toISOString();
+    const stmt = db.prepare(`
+      INSERT INTO disputes (bounty_id, milestone_id, initiator_address, reason, status, created_at, updated_at)
+      VALUES (?, ?, ?, ?, 'active', ?, ?)
+    `);
+
+    stmt.run(bountyId, milestoneId, data.initiator_address.trim(), data.reason.trim(), now, now);
+    const dispute = this.getDispute(bountyId, milestoneId)!;
+    realtimeService.broadcast('dispute_opened', dispute);
+    return dispute;
+  }
+
+  public getDispute(bountyId: number, milestoneId: number): Dispute | null {
+    const db = getDatabase();
+    const stmt = db.prepare('SELECT * FROM disputes WHERE bounty_id = ? AND milestone_id = ?');
+    const row = stmt.get(bountyId, milestoneId) as Dispute | undefined;
+    return row || null;
+  }
+
+  public listDisputes(): Dispute[] {
+    const db = getDatabase();
+    const stmt = db.prepare('SELECT * FROM disputes ORDER BY id DESC');
+    return stmt.all() as Dispute[];
+  }
+
+  public resolveDispute(bountyId: number, milestoneId: number, data: ResolveDisputeDTO): Dispute {
+    const db = getDatabase();
+    const dispute = this.getDispute(bountyId, milestoneId);
+    if (!dispute || dispute.status !== 'active') {
+      throw new Error('No active dispute found for milestone.');
+    }
+
+    const now = new Date().toISOString();
+    const newStatus = data.verdict === 'favor_contributor' ? 'approved' : 'rejected';
+
+    const tx = db.transaction(() => {
+      db.prepare(`
+        UPDATE disputes
+        SET status = 'resolved', resolution = ?, arbitrator_address = ?, updated_at = ?
+        WHERE id = ?
+      `).run(data.verdict, data.arbitrator_address, now, dispute.id);
+
+      db.prepare(`
+        UPDATE milestones
+        SET status = ?, updated_at = ?
+        WHERE id = ?
+      `).run(newStatus, now, milestoneId);
+    });
+
+    tx();
+    const updated = this.getDispute(bountyId, milestoneId)!;
+    realtimeService.broadcast('dispute_resolved', updated);
+    return updated;
+  }
+
   public getContributionsForBounty(bountyId: number): Contribution[] {
     const db = getDatabase();
     const stmt = db.prepare(`SELECT * FROM contributions WHERE bounty_id = ? ORDER BY id DESC`);
