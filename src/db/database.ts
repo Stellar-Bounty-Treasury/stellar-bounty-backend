@@ -97,6 +97,8 @@ function initSchema(db: DatabaseSync): void {
       target_amount REAL NOT NULL,
       funded_amount REAL NOT NULL DEFAULT 0,
       status TEXT NOT NULL DEFAULT 'open',
+      category TEXT NOT NULL DEFAULT 'General',
+      tags_json TEXT NOT NULL DEFAULT '[]',
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
