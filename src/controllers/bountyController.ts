@@ -646,3 +646,27 @@ export async function resolveDisputeHandler(req: Request, res: Response): Promis
     res.status(400).json({ success: false, error: err.message || 'Failed to resolve dispute' });
   }
 }
+
+
+export async function extendMilestoneHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const bountyId = parseInt(req.params.id, 10);
+    const milestoneId = parseInt(req.params.mId, 10);
+    const { deadline } = req.body;
+    const updated = bountyService.extendMilestoneDeadline(bountyId, milestoneId, deadline || '');
+    res.status(200).json({ success: true, data: updated });
+  } catch (err: any) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+}
+
+export async function cancelMilestoneHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const bountyId = parseInt(req.params.id, 10);
+    const milestoneId = parseInt(req.params.mId, 10);
+    const updated = bountyService.cancelMilestone(bountyId, milestoneId);
+    res.status(200).json({ success: true, data: updated });
+  } catch (err: any) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+}

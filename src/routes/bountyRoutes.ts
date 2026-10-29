@@ -26,6 +26,8 @@ import {
   fileDisputeHandler,
   getDisputeHandler,
   resolveDisputeHandler,
+  extendMilestoneHandler,
+  cancelMilestoneHandler,
 } from '../controllers/bountyController.js';
 
 export const bountyRouter = Router();
@@ -49,6 +51,8 @@ bountyRouter.get('/:id/events', getBountyEvents);
 bountyRouter.post('/:id/milestones/:mId/dispute', fileDisputeHandler);
 bountyRouter.get('/:id/milestones/:mId/dispute', getDisputeHandler);
 bountyRouter.post('/:id/milestones/:mId/dispute/resolve', resolveDisputeHandler);
+bountyRouter.post('/:id/milestones/:mId/extend', extendMilestoneHandler);
+bountyRouter.post('/:id/milestones/:mId/cancel', cancelMilestoneHandler);
 
 // Global Milestones router
 export const milestoneRouter = Router();
