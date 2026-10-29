@@ -31,6 +31,7 @@ import {
   createWebhookHandler,
   listWebhooksHandler,
   exportCsvHandler,
+  getAuthChallengeHandler,
   fileDisputeHandler,
   getDisputeHandler,
   resolveDisputeHandler,
@@ -52,6 +53,7 @@ bountyRouter.post('/soroban/simulate', simulateTransactionHandler);
 bountyRouter.post('/webhooks', createWebhookHandler);
 bountyRouter.get('/webhooks', listWebhooksHandler);
 bountyRouter.get('/export/csv', exportCsvHandler);
+bountyRouter.get('/auth/challenge', getAuthChallengeHandler);
 
 // Bounty Core Routes
 bountyRouter.post('/', createBounty);

@@ -1,3 +1,4 @@
+import { sep10Service } from '../services/sep10.js';
 import { exportService } from '../services/exportService.js';
 import { webhookService } from '../services/webhookService.js';
 import { sorobanRpcService } from '../services/sorobanRpcService.js';
@@ -786,4 +787,23 @@ export async function exportCsvHandler(_req: Request, res: Response): Promise<vo
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
+}
+
+
+export async function getAuthChallengeHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const { public_key } = req.query;
+    if (!pubKeyValid(public_key)) {
+      res.status(400).json({ success: false, error: 'public_key query param is required' });
+      return;
+    }
+    const challenge = sep10Service.createChallenge(String(public_key));
+    res.status(200).json({ success: true, data: challenge });
+  } catch (err: any) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+}
+
+function pubKeyValid(key: any): boolean {
+  return typeof key === 'string' && key.startsWith('G') && key.length === 56;
 }
