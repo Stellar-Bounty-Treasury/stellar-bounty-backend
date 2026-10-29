@@ -24,6 +24,7 @@ import {
   streamEvents,
   reconcile,
   getCategoryStatsHandler,
+  getAuditLogsHandler,
   fileDisputeHandler,
   getDisputeHandler,
   resolveDisputeHandler,
@@ -38,6 +39,7 @@ bountyRouter.get('/stats', getTreasuryStats);
 
 // Categories Stats
 bountyRouter.get('/categories/stats', getCategoryStatsHandler);
+bountyRouter.get('/audit-logs', getAuditLogsHandler);
 
 // Bounty Core Routes
 bountyRouter.post('/', createBounty);

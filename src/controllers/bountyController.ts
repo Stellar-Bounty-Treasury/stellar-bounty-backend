@@ -698,3 +698,16 @@ export async function getCategoryStatsHandler(_req: Request, res: Response): Pro
     res.status(500).json({ success: false, error: err.message });
   }
 }
+
+
+import { auditService } from '../services/auditService.js';
+
+export async function getAuditLogsHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : 50;
+    const logs = auditService.listLogs(limit);
+    res.status(200).json({ success: true, data: logs });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
