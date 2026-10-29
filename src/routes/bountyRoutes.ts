@@ -26,6 +26,7 @@ import {
   getCategoryStatsHandler,
   getAuditLogsHandler,
   getLeaderboardHandler,
+  getTimelineStatsHandler,
   fileDisputeHandler,
   getDisputeHandler,
   resolveDisputeHandler,
@@ -42,6 +43,7 @@ bountyRouter.get('/stats', getTreasuryStats);
 bountyRouter.get('/categories/stats', getCategoryStatsHandler);
 bountyRouter.get('/audit-logs', getAuditLogsHandler);
 bountyRouter.get('/leaderboard', getLeaderboardHandler);
+bountyRouter.get('/stats/timeline', getTimelineStatsHandler);
 
 // Bounty Core Routes
 bountyRouter.post('/', createBounty);

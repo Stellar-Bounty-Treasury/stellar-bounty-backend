@@ -723,3 +723,13 @@ export async function getLeaderboardHandler(req: Request, res: Response): Promis
     res.status(500).json({ success: false, error: err.message });
   }
 }
+
+
+export async function getTimelineStatsHandler(_req: Request, res: Response): Promise<void> {
+  try {
+    const timeline = bountyService.getFundingTimeline();
+    res.status(200).json({ success: true, data: timeline });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
