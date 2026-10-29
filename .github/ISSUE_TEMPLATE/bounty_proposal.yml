@@ -1,0 +1,44 @@
+name: Bounty Proposal
+description: Propose a new bounty to be funded in the Stellar Bounty Treasury
+labels: ["bounty-proposal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Propose a new task, smart contract, or developer tool for ecosystem funding.
+  - type: input
+    id: title
+    attributes:
+      label: Bounty Title
+      placeholder: "e.g. Build Soroban AMM Liquidity Router"
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Ecosystem Category
+      options:
+        - "Smart Contracts"
+        - "DeFi"
+        - "Security"
+        - "Tooling"
+        - "Infrastructure"
+        - "Community"
+    validations:
+      required: true
+  - type: input
+    id: target-amount
+    attributes:
+      label: Requested Funding Amount (XLM)
+      placeholder: "2500"
+    validations:
+      required: true
+  - type: textarea
+    id: deliverables
+    attributes:
+      label: Milestone Deliverables & Acceptance Criteria
+      placeholder: |
+        - Milestone 1: Specification & architecture
+        - Milestone 2: Smart contract implementation & tests
+    validations:
+      required: true
