@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  stellar-quickstart:
+    image: stellar/quickstart:latest
+    container_name: stellar-quickstart-standalone
+    command: ["--standalone", "--enable-soroban-rpc"]
+    ports:
+      - "8000:8000"
+    environment:
+      - ENABLE_CORE=true
+      - ENABLE_HORIZON=true
+      - ENABLE_SOROBAN_RPC=true
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stellar-bounty-backend-local
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    depends_on:
+      - stellar-quickstart
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DATABASE_PATH=/data/bounties_local.db
+      - HORIZON_URL=http://stellar-quickstart:8000
+      - SOROBAN_RPC_URL=http://stellar-quickstart:8000/soroban/rpc
+      - CORS_ORIGIN=*
+    volumes:
+      - sqlite_local_data:/data
+
+volumes:
+  sqlite_local_data:
