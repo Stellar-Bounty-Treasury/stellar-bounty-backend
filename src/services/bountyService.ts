@@ -284,6 +284,20 @@ export class BountyService {
     return counts;
   }
 
+
+  public getContributorLeaderboard(limit = 10): any[] {
+    const db = getDatabase();
+    const rows = db.prepare(`
+      SELECT recipient_address, COUNT(*) as completed_milestones, SUM(reward_amount) as total_earned
+      FROM milestones
+      WHERE status = 'paid'
+      GROUP BY recipient_address
+      ORDER BY total_earned DESC
+      LIMIT ?
+    `).all(limit);
+    return rows;
+  }
+
   // --- Milestones ---
 
   public createMilestone(bountyId: number, data: CreateMilestoneDTO): Milestone {
