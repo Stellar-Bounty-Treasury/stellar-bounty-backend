@@ -1,11 +1,23 @@
-import Database from 'better-sqlite3';
+import { DatabaseSync } from 'node:sqlite';
 import path from 'path';
 import fs from 'fs';
 import { config } from '../config.js';
 
-let dbInstance: Database.Database | null = null;
+export interface StatementSync {
+  run(...params: any[]): { changes: number | bigint; lastInsertRowid: number | bigint };
+  get<T = any>(...params: any[]): T | undefined;
+  all<T = any>(...params: any[]): T[];
+}
 
-export function getDatabase(dbPath?: string): Database.Database {
+export interface ExtendedDatabaseSync extends Omit<DatabaseSync, 'prepare'> {
+  prepare(sql: string): StatementSync;
+  transaction<T extends (...args: any[]) => any>(fn: T): T;
+  pragma(sql: string): any;
+}
+
+let dbInstance: ExtendedDatabaseSync | null = null;
+
+export function getDatabase(dbPath?: string): ExtendedDatabaseSync {
   if (dbInstance) {
     return dbInstance;
   }
@@ -16,22 +28,64 @@ export function getDatabase(dbPath?: string): Database.Database {
     fs.mkdirSync(dir, { recursive: true });
   }
 
-  dbInstance = new Database(resolvedPath);
-  dbInstance.pragma('journal_mode = WAL');
-  dbInstance.pragma('foreign_keys = ON');
+  const rawDb = new DatabaseSync(resolvedPath);
+  rawDb.exec('PRAGMA journal_mode = WAL;');
+  rawDb.exec('PRAGMA foreign_keys = ON;');
 
-  initSchema(dbInstance);
+  const extendedDb = rawDb as unknown as ExtendedDatabaseSync;
+
+  extendedDb.pragma = (pragmaStr: string) => {
+    return rawDb.exec(`PRAGMA ${pragmaStr};`);
+  };
+
+  let txDepth = 0;
+  extendedDb.transaction = <T extends (...args: any[]) => any>(fn: T): T => {
+    const wrapped = (...args: any[]) => {
+      const isTopLevel = txDepth === 0;
+      txDepth++;
+      const savepointName = `sp_${txDepth}`;
+      if (isTopLevel) {
+        rawDb.exec('BEGIN TRANSACTION;');
+      } else {
+        rawDb.exec(`SAVEPOINT ${savepointName};`);
+      }
+      try {
+        const result = fn(...args);
+        if (isTopLevel) {
+          rawDb.exec('COMMIT;');
+        } else {
+          rawDb.exec(`RELEASE SAVEPOINT ${savepointName};`);
+        }
+        return result;
+      } catch (err) {
+        try {
+          if (isTopLevel) {
+            rawDb.exec('ROLLBACK;');
+          } else {
+            rawDb.exec(`ROLLBACK TO SAVEPOINT ${savepointName};`);
+          }
+        } catch (_) {}
+        throw err;
+      } finally {
+        txDepth--;
+      }
+    };
+    return wrapped as T;
+  };
+
+  initSchema(rawDb);
+  dbInstance = extendedDb;
   return dbInstance;
 }
 
 export function closeDatabase(): void {
   if (dbInstance) {
-    dbInstance.close();
+    (dbInstance as unknown as DatabaseSync).close();
     dbInstance = null;
   }
 }
 
-function initSchema(db: Database.Database): void {
+function initSchema(db: DatabaseSync): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS bounties (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
