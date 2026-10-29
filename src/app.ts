@@ -11,6 +11,9 @@ import {
 } from './routes/bountyRoutes.js';
 import { healthCheck, readyCheck } from './controllers/bountyController.js';
 import { rateLimiter } from './middleware/rateLimiter.js';
+import { requestIdMiddleware } from './middleware/requestId.js';
+import { sanitizeMiddleware } from './middleware/sanitize.js';
+import { idempotencyMiddleware } from './middleware/idempotency.js';
 import { structuredLogger } from './middleware/logger.js';
 
 export function createApp(): Express {
@@ -19,7 +22,10 @@ export function createApp(): Express {
   app.use(cors({ origin: config.corsOrigin }));
   app.use(express.json());
   app.use(structuredLogger);
+  app.use(requestIdMiddleware);
+  app.use(sanitizeMiddleware);
   app.use(rateLimiter);
+  app.use(idempotencyMiddleware);
 
   // Health and Readiness checks
   app.get('/health', healthCheck);
