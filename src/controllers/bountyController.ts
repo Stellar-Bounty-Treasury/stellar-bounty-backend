@@ -688,3 +688,13 @@ export async function cancelMilestoneHandler(req: Request, res: Response): Promi
     res.status(400).json({ success: false, error: err.message });
   }
 }
+
+
+export async function getCategoryStatsHandler(_req: Request, res: Response): Promise<void> {
+  try {
+    const stats = bountyService.getCategoryCounts();
+    res.status(200).json({ success: true, data: stats });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}

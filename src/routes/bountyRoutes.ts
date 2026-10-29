@@ -23,6 +23,7 @@ import {
   getTreasuryStats,
   streamEvents,
   reconcile,
+  getCategoryStatsHandler,
   fileDisputeHandler,
   getDisputeHandler,
   resolveDisputeHandler,
@@ -34,6 +35,9 @@ export const bountyRouter = Router();
 
 // Treasury Stats
 bountyRouter.get('/stats', getTreasuryStats);
+
+// Categories Stats
+bountyRouter.get('/categories/stats', getCategoryStatsHandler);
 
 // Bounty Core Routes
 bountyRouter.post('/', createBounty);
