@@ -1,3 +1,4 @@
+import { webhookService } from '../services/webhookService.js';
 import { sorobanRpcService } from '../services/sorobanRpcService.js';
 import { Request, Response } from 'express';
 import { bountyService } from '../services/bountyService.js';
@@ -745,6 +746,30 @@ export async function simulateTransactionHandler(req: Request, res: Response): P
     }
     const result = await sorobanRpcService.simulateTransaction(tx);
     res.status(200).json({ success: true, data: result });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
+
+
+export async function createWebhookHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const { url, secret, event_types } = req.body;
+    if (!url || !url.startsWith('http')) {
+      res.status(400).json({ success: false, error: 'Valid HTTP URL is required' });
+      return;
+    }
+    const hook = webhookService.registerWebhook(url, secret, event_types);
+    res.status(201).json({ success: true, data: hook });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
+
+export async function listWebhooksHandler(_req: Request, res: Response): Promise<void> {
+  try {
+    const hooks = webhookService.listWebhooks();
+    res.status(200).json({ success: true, data: hooks });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }

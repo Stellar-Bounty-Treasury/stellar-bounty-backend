@@ -28,6 +28,8 @@ import {
   getLeaderboardHandler,
   getTimelineStatsHandler,
   simulateTransactionHandler,
+  createWebhookHandler,
+  listWebhooksHandler,
   fileDisputeHandler,
   getDisputeHandler,
   resolveDisputeHandler,
@@ -46,6 +48,8 @@ bountyRouter.get('/audit-logs', getAuditLogsHandler);
 bountyRouter.get('/leaderboard', getLeaderboardHandler);
 bountyRouter.get('/stats/timeline', getTimelineStatsHandler);
 bountyRouter.post('/soroban/simulate', simulateTransactionHandler);
+bountyRouter.post('/webhooks', createWebhookHandler);
+bountyRouter.get('/webhooks', listWebhooksHandler);
 
 // Bounty Core Routes
 bountyRouter.post('/', createBounty);
