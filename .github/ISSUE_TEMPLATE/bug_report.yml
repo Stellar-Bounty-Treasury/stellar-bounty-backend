@@ -1,0 +1,39 @@
+name: Bug Report
+description: Create a structured report to help us improve Stellar Bounty Treasury
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: input
+    id: contact
+    attributes:
+      label: Stellar Account (Optional)
+      description: Your public Stellar address or Discord handle
+    validations:
+      required: false
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Also tell us what you expected to happen
+      placeholder: Describe the defect...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      placeholder: |
+        1. Query endpoint '...'
+        2. Inspect response...
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "Node 22, Windows 11 / Linux, Stellar Testnet"
+    validations:
+      required: false
