@@ -1,9 +1,12 @@
 {
   "name": "stellar-bounty-backend",
-  "version": "1.0.0",
+  "version": "4.0.0",
   "type": "module",
   "description": "Backend API, database persistence, and Stellar Testnet transaction verification service for Stellar Bounty Treasury",
   "main": "dist/server.js",
+  "engines": {
+    "node": ">=22.5.0"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
