@@ -31,6 +31,7 @@ export function getDatabase(dbPath?: string): ExtendedDatabaseSync {
   const rawDb = new DatabaseSync(resolvedPath);
   rawDb.exec('PRAGMA journal_mode = WAL;');
   rawDb.exec('PRAGMA foreign_keys = ON;');
+  rawDb.exec('PRAGMA busy_timeout = 5000;');
 
   const extendedDb = rawDb as unknown as ExtendedDatabaseSync;
 
