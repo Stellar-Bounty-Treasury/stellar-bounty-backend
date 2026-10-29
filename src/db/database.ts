@@ -227,6 +227,16 @@ function initSchema(db: DatabaseSync): void {
       created_at TEXT NOT NULL
     );
 
+
+    CREATE TABLE IF NOT EXISTS webhooks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      url TEXT NOT NULL,
+      secret TEXT,
+      event_types TEXT NOT NULL DEFAULT '*',
+      is_active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL
+    );
+
     CREATE INDEX IF NOT EXISTS idx_bounties_status ON bounties(status);
     CREATE INDEX IF NOT EXISTS idx_milestones_bounty ON milestones(bounty_id);
     CREATE INDEX IF NOT EXISTS idx_contributions_bounty ON contributions(bounty_id);
