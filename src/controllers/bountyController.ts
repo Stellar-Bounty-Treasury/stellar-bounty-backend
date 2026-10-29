@@ -583,3 +583,57 @@ export async function readyCheck(req: Request, res: Response): Promise<void> {
     });
   }
 }
+
+
+export async function fileDisputeHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const bountyId = parseInt(req.params.id, 10);
+    const milestoneId = parseInt(req.params.mId, 10);
+    const { initiator_address, reason } = req.body;
+
+    if (!initiator_address || !reason) {
+      res.status(400).json({ success: false, error: 'initiator_address and reason are required' });
+      return;
+    }
+
+    const dispute = bountyService.fileDispute(bountyId, milestoneId, { initiator_address, reason });
+    res.status(201).json({ success: true, data: dispute });
+  } catch (err: any) {
+    res.status(400).json({ success: false, error: err.message || 'Failed to file dispute' });
+  }
+}
+
+export async function getDisputeHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const bountyId = parseInt(req.params.id, 10);
+    const milestoneId = parseInt(req.params.mId, 10);
+    const dispute = bountyService.getDispute(bountyId, milestoneId);
+
+    if (!dispute) {
+      res.status(404).json({ success: false, error: 'Dispute not found' });
+      return;
+    }
+
+    res.status(200).json({ success: true, data: dispute });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message || 'Failed to retrieve dispute' });
+  }
+}
+
+export async function resolveDisputeHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const bountyId = parseInt(req.params.id, 10);
+    const milestoneId = parseInt(req.params.mId, 10);
+    const { arbitrator_address, verdict } = req.body;
+
+    if (!arbitrator_address || !verdict) {
+      res.status(400).json({ success: false, error: 'arbitrator_address and verdict are required' });
+      return;
+    }
+
+    const resolved = bountyService.resolveDispute(bountyId, milestoneId, { arbitrator_address, verdict });
+    res.status(200).json({ success: true, data: resolved });
+  } catch (err: any) {
+    res.status(400).json({ success: false, error: err.message || 'Failed to resolve dispute' });
+  }
+}
