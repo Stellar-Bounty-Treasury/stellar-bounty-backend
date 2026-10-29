@@ -30,11 +30,29 @@ export async function createBounty(req: Request, res: Response): Promise<void> {
 
 export async function listBounties(req: Request, res: Response): Promise<void> {
   try {
-    const bounties = bountyService.listBounties();
+    const { search, status, category, creator, min_amount, max_amount, sort_by, order, page, limit } = req.query;
+
+    const result = bountyService.listBountiesFiltered({
+      search: search ? String(search) : undefined,
+      status: status ? String(status) : undefined,
+      category: category ? String(category) : undefined,
+      creator: creator ? String(creator) : undefined,
+      min_amount: min_amount ? Number(min_amount) : undefined,
+      max_amount: max_amount ? Number(max_amount) : undefined,
+      sort_by: sort_by as any,
+      order: order as any,
+      page: page ? Number(page) : 1,
+      limit: limit ? Number(limit) : 20,
+    });
+
     res.status(200).json({
       success: true,
-      data: bounties,
-      count: bounties.length,
+      data: result.bounties,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: result.totalPages,
+      count: result.bounties.length,
     });
   } catch (err: any) {
     res.status(500).json({
