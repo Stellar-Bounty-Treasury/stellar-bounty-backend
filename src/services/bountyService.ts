@@ -72,6 +72,28 @@ export interface Settlement {
   updated_at: string;
 }
 
+
+export interface BountyFilterOptions {
+  search?: string;
+  status?: string;
+  category?: string;
+  creator?: string;
+  min_amount?: number;
+  max_amount?: number;
+  sort_by?: 'created_at' | 'target_amount' | 'funded_amount';
+  order?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedBounties {
+  bounties: Bounty[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export interface CreateBountyDTO {
   title: string;
   description: string;
@@ -170,6 +192,72 @@ export class BountyService {
 
     realtimeService.broadcast('bounty_created', bounty);
     return bounty;
+  }
+
+
+  public listBountiesFiltered(options: BountyFilterOptions = {}): PaginatedBounties {
+    const db = getDatabase();
+    const conditions: string[] = [];
+    const params: any[] = [];
+
+    if (options.status && options.status !== 'all') {
+      conditions.push('status = ?');
+      params.push(options.status);
+    }
+    if (options.category && options.category !== 'all') {
+      conditions.push('category = ?');
+      params.push(options.category);
+    }
+    if (options.creator) {
+      conditions.push('creator_address = ?');
+      params.push(options.creator.trim());
+    }
+    if (typeof options.min_amount === 'number' && !isNaN(options.min_amount)) {
+      conditions.push('target_amount >= ?');
+      params.push(options.min_amount);
+    }
+    if (typeof options.max_amount === 'number' && !isNaN(options.max_amount)) {
+      conditions.push('target_amount <= ?');
+      params.push(options.max_amount);
+    }
+    if (options.search && options.search.trim().length > 0) {
+      conditions.push('(title LIKE ? OR description LIKE ?)');
+      const term = `%${options.search.trim()}%`;
+      params.push(term, term);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    // Count query
+    const countStmt = db.prepare(`SELECT COUNT(*) as total FROM bounties ${whereClause}`);
+    const countRow = countStmt.get(...params) as { total: number };
+    const total = countRow ? countRow.total : 0;
+
+    const page = Math.max(1, options.page || 1);
+    const limit = Math.min(100, Math.max(1, options.limit || 20));
+    const offset = (page - 1) * limit;
+
+    const sortCol = ['created_at', 'target_amount', 'funded_amount'].includes(options.sort_by || '')
+      ? options.sort_by
+      : 'id';
+    const sortOrder = (options.order || 'desc').toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+    const queryStmt = db.prepare(`
+      SELECT * FROM bounties
+      ${whereClause}
+      ORDER BY ${sortCol} ${sortOrder}
+      LIMIT ? OFFSET ?
+    `);
+
+    const bounties = queryStmt.all(...params, limit, offset) as Bounty[];
+
+    return {
+      bounties,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit) || 1,
+    };
   }
 
   public listBounties(): Bounty[] {
