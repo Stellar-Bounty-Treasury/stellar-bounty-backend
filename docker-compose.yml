@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stellar-bounty-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_PATH=/data/bounties.db
+      - HORIZON_URL=https://horizon-testnet.stellar.org
+      - SOROBAN_RPC_URL=https://soroban-testnet.stellar.org
+      - CORS_ORIGIN=http://localhost:5173
+    volumes:
+      - sqlite_data:/data
+    healthcheck:
+      test: ["CMD", "node", "scripts/health_check.js"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  sqlite_data:
+    driver: local
