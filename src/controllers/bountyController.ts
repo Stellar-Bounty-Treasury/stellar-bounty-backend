@@ -537,6 +537,9 @@ export async function healthCheck(req: Request, res: Response): Promise<void> {
     const db = getDatabase();
     const dbCheck = db.prepare('SELECT 1 as alive').get() as { alive: number };
 
+    const bountyCountRow = db.prepare('SELECT COUNT(*) as count FROM bounties').get() as { count: number };
+    const mem = process.memoryUsage();
+
     res.status(200).json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
@@ -547,6 +550,12 @@ export async function healthCheck(req: Request, res: Response): Promise<void> {
       horizonUrl: config.horizonUrl,
       sorobanRpcUrl: config.sorobanRpcUrl,
       database: dbCheck?.alive === 1 ? 'connected' : 'disconnected',
+      bountyCount: bountyCountRow ? bountyCountRow.count : 0,
+      memory: {
+        heapUsedMB: Math.round(mem.heapUsed / 1024 / 1024),
+        rssMB: Math.round(mem.rss / 1024 / 1024),
+      },
+      uptimeSeconds: Math.round(process.uptime()),
       realtime_clients: realtimeService.getClientCount(),
     });
   } catch (err: any) {
