@@ -1,29 +1,35 @@
-name: Backend Service CI
+name: CI Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [ main, develop ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
   test-and-build:
-    runs-on: ubuntu-latest
+    name: Node ${{ matrix.node-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [ 20.x, 22.x ]
+        os: [ ubuntu-latest, windows-latest ]
     steps:
-      - name: Checkout source code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install Dependencies
+        run: npm ci
 
-      - name: Run Jest Test Suite
+      - name: Run Test Suite
         run: npm test
 
-      - name: Typecheck and Compile TypeScript
+      - name: Build TypeScript
         run: npm run build
