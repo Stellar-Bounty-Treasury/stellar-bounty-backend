@@ -94,6 +94,30 @@ export interface RecordContributionDTO {
   transaction_hash: string;
 }
 
+
+export interface Dispute {
+  id: number;
+  bounty_id: number;
+  milestone_id: number;
+  initiator_address: string;
+  reason: string;
+  status: 'active' | 'resolved' | 'cancelled';
+  resolution?: string;
+  arbitrator_address?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FileDisputeDTO {
+  initiator_address: string;
+  reason: string;
+}
+
+export interface ResolveDisputeDTO {
+  arbitrator_address: string;
+  verdict: 'favor_contributor' | 'favor_creator';
+}
+
 export interface ConfigureSettlementDTO {
   allocation_type: 'fixed' | 'percentage';
   recipients: SettlementRecipient[];
