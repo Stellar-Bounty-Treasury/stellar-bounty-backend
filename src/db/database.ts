@@ -218,6 +218,15 @@ function initSchema(db: DatabaseSync): void {
     CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_logs(action_type);
     CREATE INDEX IF NOT EXISTS idx_audit_actor ON audit_logs(actor_address);
 
+
+    CREATE TABLE IF NOT EXISTS idempotency_keys (
+      idempotency_key TEXT PRIMARY KEY,
+      path TEXT NOT NULL,
+      status_code INTEGER NOT NULL,
+      response_json TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
+
     CREATE INDEX IF NOT EXISTS idx_bounties_status ON bounties(status);
     CREATE INDEX IF NOT EXISTS idx_milestones_bounty ON milestones(bounty_id);
     CREATE INDEX IF NOT EXISTS idx_contributions_bounty ON contributions(bounty_id);
