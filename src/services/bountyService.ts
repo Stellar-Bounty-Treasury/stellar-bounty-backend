@@ -745,6 +745,36 @@ export class BountyService {
   }
 
 
+
+  public extendMilestoneDeadline(bountyId: number, milestoneId: number, newDeadline: string): Milestone {
+    const db = getDatabase();
+    const milestone = this.getMilestoneById(milestoneId);
+    if (!milestone || milestone.bounty_id !== bountyId) {
+      throw new Error('Milestone not found.');
+    }
+    const now = new Date().toISOString();
+    db.prepare('UPDATE milestones SET updated_at = ? WHERE id = ?').run(now, milestoneId);
+    const updated = this.getMilestoneById(milestoneId)!;
+    realtimeService.broadcast('milestone_extended', updated);
+    return updated;
+  }
+
+  public cancelMilestone(bountyId: number, milestoneId: number): Milestone {
+    const db = getDatabase();
+    const milestone = this.getMilestoneById(milestoneId);
+    if (!milestone || milestone.bounty_id !== bountyId) {
+      throw new Error('Milestone not found.');
+    }
+    if (milestone.status === 'paid') {
+      throw new Error('Cannot cancel already paid milestone.');
+    }
+    const now = new Date().toISOString();
+    db.prepare("UPDATE milestones SET status = 'rejected', updated_at = ? WHERE id = ?").run(now, milestoneId);
+    const updated = this.getMilestoneById(milestoneId)!;
+    realtimeService.broadcast('milestone_cancelled', updated);
+    return updated;
+  }
+
   public fileDispute(bountyId: number, milestoneId: number, data: FileDisputeDTO): Dispute {
     const db = getDatabase();
     const milestone = this.getMilestoneById(milestoneId);
