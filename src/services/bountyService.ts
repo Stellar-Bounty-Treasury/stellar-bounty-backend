@@ -298,6 +298,19 @@ export class BountyService {
     return rows;
   }
 
+
+  public getFundingTimeline(): any[] {
+    const db = getDatabase();
+    const rows = db.prepare(`
+      SELECT substr(created_at, 1, 10) as date, COUNT(*) as bounties_created, SUM(target_amount) as volume
+      FROM bounties
+      GROUP BY substr(created_at, 1, 10)
+      ORDER BY date ASC
+      LIMIT 30
+    `).all();
+    return rows;
+  }
+
   // --- Milestones ---
 
   public createMilestone(bountyId: number, data: CreateMilestoneDTO): Milestone {
