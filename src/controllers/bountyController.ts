@@ -4,6 +4,7 @@ import { eventIndexer } from '../services/eventIndexer.js';
 import { realtimeService } from '../services/realtimeService.js';
 import { getDatabase } from '../db/database.js';
 import { config } from '../config.js';
+import { memoryCache } from '../services/memoryCache.js';
 
 export async function createBounty(req: Request, res: Response): Promise<void> {
   try {
