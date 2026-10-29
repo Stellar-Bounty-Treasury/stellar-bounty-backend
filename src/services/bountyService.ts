@@ -273,6 +273,17 @@ export class BountyService {
     return (row as Bounty) || null;
   }
 
+
+  public getCategoryCounts(): Record<string, number> {
+    const db = getDatabase();
+    const rows = db.prepare('SELECT category, COUNT(*) as count FROM bounties GROUP BY category').all() as { category: string; count: number }[];
+    const counts: Record<string, number> = {};
+    for (const r of rows) {
+      counts[r.category || 'General'] = r.count;
+    }
+    return counts;
+  }
+
   // --- Milestones ---
 
   public createMilestone(bountyId: number, data: CreateMilestoneDTO): Milestone {
