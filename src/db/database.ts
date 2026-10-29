@@ -237,6 +237,13 @@ function initSchema(db: DatabaseSync): void {
       created_at TEXT NOT NULL
     );
 
+
+    CREATE TABLE IF NOT EXISTS indexer_cursors (
+      indexer_name TEXT PRIMARY KEY,
+      cursor TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
     CREATE INDEX IF NOT EXISTS idx_bounties_status ON bounties(status);
     CREATE INDEX IF NOT EXISTS idx_milestones_bounty ON milestones(bounty_id);
     CREATE INDEX IF NOT EXISTS idx_contributions_bounty ON contributions(bounty_id);
