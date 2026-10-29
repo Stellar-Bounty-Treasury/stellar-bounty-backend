@@ -1,3 +1,4 @@
+import { exportService } from '../services/exportService.js';
 import { webhookService } from '../services/webhookService.js';
 import { sorobanRpcService } from '../services/sorobanRpcService.js';
 import { Request, Response } from 'express';
@@ -770,6 +771,18 @@ export async function listWebhooksHandler(_req: Request, res: Response): Promise
   try {
     const hooks = webhookService.listWebhooks();
     res.status(200).json({ success: true, data: hooks });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
+
+
+export async function exportCsvHandler(_req: Request, res: Response): Promise<void> {
+  try {
+    const csv = exportService.generateBountiesCsv();
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="stellar-bounties-${Date.now()}.csv"`);
+    res.status(200).send(csv);
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
