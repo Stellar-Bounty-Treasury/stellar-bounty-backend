@@ -1,14 +1,18 @@
-## Summary of Changes
-<!-- A concise summary of changes made to backend APIs, indexer, or tests -->
+## Description
+<!-- Briefly describe the changes introduced by this pull request. -->
 
-## Issue Reference
-Closes #<!-- Issue Number -->
+## Associated Issues
+- Fixes #
 
-## Checklist
-- [ ] `npm test` passes with all 28+ Jest tests green
-- [ ] `npm run build` TypeScript compilation succeeds with zero errors
-- [ ] Idempotency and deduplication safeguards preserved
-- [ ] API routes include appropriate input validation
+## Category
+- [ ] Smart Contracts (Soroban)
+- [ ] Backend API & Indexer
+- [ ] Frontend Web Application
+- [ ] Infrastructure & CI/CD
+- [ ] Documentation / SEPs
 
-## Verification
-<!-- Test output or verification commands -->
+## Verification Checklist
+- [ ] Unit tests added / updated and passing (`npm test`)
+- [ ] TypeScript compilation verified (`npm run build`)
+- [ ] Database migrations / schema updates verified
+- [ ] Stellar Testnet interaction verified (if applicable)
