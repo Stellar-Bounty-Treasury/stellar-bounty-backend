@@ -711,3 +711,14 @@ export async function getAuditLogsHandler(req: Request, res: Response): Promise<
     res.status(500).json({ success: false, error: err.message });
   }
 }
+
+
+export async function getLeaderboardHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : 10;
+    const leaderboard = bountyService.getContributorLeaderboard(limit);
+    res.status(200).json({ success: true, data: leaderboard });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}

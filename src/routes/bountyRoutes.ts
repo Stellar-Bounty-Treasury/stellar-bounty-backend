@@ -25,6 +25,7 @@ import {
   reconcile,
   getCategoryStatsHandler,
   getAuditLogsHandler,
+  getLeaderboardHandler,
   fileDisputeHandler,
   getDisputeHandler,
   resolveDisputeHandler,
@@ -40,6 +41,7 @@ bountyRouter.get('/stats', getTreasuryStats);
 // Categories Stats
 bountyRouter.get('/categories/stats', getCategoryStatsHandler);
 bountyRouter.get('/audit-logs', getAuditLogsHandler);
+bountyRouter.get('/leaderboard', getLeaderboardHandler);
 
 // Bounty Core Routes
 bountyRouter.post('/', createBounty);
