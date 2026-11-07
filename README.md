@@ -174,11 +174,15 @@ cp .env.example .env
 
 ```env
 PORT=5000
-DATABASE_URL=sqlite:./treasury.sqlite
+NODE_ENV=development
+CORS_ORIGIN=*
+DATABASE_PATH=./data/treasury.db
+ADMIN_SECRET=dev-admin-secret-change-in-prod
 STELLAR_NETWORK=TESTNET
-SOROBAN_CONTRACT_ID=CADMWQPCCQP27UHQU4JG3C6V5I3UFNNC4DVOMSK2GUJFA6Q2PNW36S52
+CONTRACT_ADDRESS=CADMWQPCCQP27UHQU4JG3C6V5I3UFNNC4DVOMSK2GUJFA6Q2PNW36S52
 SOROBAN_RPC_URL=https://soroban-testnet.stellar.org
 HORIZON_URL=https://horizon-testnet.stellar.org
+STELLAR_PASSPHRASE="Test SDF Network ; September 2015"
 ```
 
 ### Running Locally
@@ -187,7 +191,7 @@ HORIZON_URL=https://horizon-testnet.stellar.org
 # Development mode with hot-reloading
 npm run dev
 
-# Run test suite (28 unit and integration tests)
+# Run test suite (65 unit and integration tests)
 npm test
 
 # Build for production
@@ -207,13 +211,14 @@ Run the comprehensive test suite with Vitest:
 npm test
 ```
 
-Includes **62 passing unit and integration tests across 20 test suites** covering:
+Includes **65 passing unit and integration tests across 20 test suites** covering:
 * Pre-flight Soroban RPC simulation and resource estimation
 * SEP-0010 Stellar Web Authentication challenge verification
-* Event ingestion, deduplication, and retry recovery
+* Non-bypassable on-chain payment and Soroban contract verification
+* Event ingestion, deduplication, and double-counting prevention
 * Multi-recipient settlement routing (fixed and percentage allocations)
 * Transaction lifecycle tracking and state machine transitions
-* Idempotent payment recording
+* Idempotent payment recording and SSRF-hardened webhooks
 * Contract reconciliation and health checks
 
 ---
