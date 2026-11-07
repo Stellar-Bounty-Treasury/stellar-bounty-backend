@@ -3,6 +3,7 @@ import { exportService } from '../services/exportService.js';
 import { webhookService } from '../services/webhookService.js';
 import { sorobanRpcService } from '../services/sorobanRpcService.js';
 import { Request, Response } from 'express';
+import { StrKey } from '@stellar/stellar-sdk';
 import { bountyService } from '../services/bountyService.js';
 import { eventIndexer } from '../services/eventIndexer.js';
 import { realtimeService } from '../services/realtimeService.js';
@@ -348,7 +349,18 @@ export async function refundBounty(req: Request, res: Response): Promise<void> {
   try {
     const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const bountyId = parseInt(String(rawId), 10);
-    const { tx_hash } = req.body;
+    const { tx_hash, caller_address } = req.body;
+
+    const existing = bountyService.getBountyById(bountyId);
+    if (!existing) {
+      res.status(404).json({ success: false, error: `Bounty with ID ${bountyId} not found.` });
+      return;
+    }
+
+    if (caller_address && caller_address.toLowerCase() !== existing.creator_address.toLowerCase()) {
+      res.status(403).json({ success: false, error: 'Unauthorized: only bounty creator can refund bounty' });
+      return;
+    }
 
     const bounty = bountyService.refundBounty(bountyId, tx_hash);
     res.status(200).json({
@@ -622,8 +634,13 @@ export async function fileDisputeHandler(req: Request, res: Response): Promise<v
     const milestoneId = parseInt(req.params.mId, 10);
     const { initiator_address, reason } = req.body;
 
-    if (!initiator_address || !reason) {
-      res.status(400).json({ success: false, error: 'initiator_address and reason are required' });
+    if (!initiator_address || !reason || typeof reason !== 'string' || reason.trim().length === 0) {
+      res.status(400).json({ success: false, error: 'initiator_address and non-empty reason are required' });
+      return;
+    }
+
+    if (!StrKey.isValidEd25519PublicKey(initiator_address)) {
+      res.status(400).json({ success: false, error: 'Invalid initiator public key format' });
       return;
     }
 
@@ -659,6 +676,16 @@ export async function resolveDisputeHandler(req: Request, res: Response): Promis
 
     if (!arbitrator_address || !verdict) {
       res.status(400).json({ success: false, error: 'arbitrator_address and verdict are required' });
+      return;
+    }
+
+    if (!['favor_contributor', 'favor_creator'].includes(verdict)) {
+      res.status(400).json({ success: false, error: 'verdict must be either favor_contributor or favor_creator' });
+      return;
+    }
+
+    if (!StrKey.isValidEd25519PublicKey(arbitrator_address)) {
+      res.status(400).json({ success: false, error: 'Invalid arbitrator public key format' });
       return;
     }
 
