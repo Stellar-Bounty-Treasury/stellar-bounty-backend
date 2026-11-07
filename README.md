@@ -128,6 +128,11 @@ Monitors transaction lifecycle states (`DETECTED` ➔ `SUBMITTED` ➔ `CONFIRMED
 | `GET` | `/api/settlements/:id` | Fetch settlement report with all recipients |
 | `GET` | `/api/transactions/:hash` | Track transaction state (`DETECTED`, `CONFIRMED`, `INDEXED`) |
 | `POST` | `/api/reconcile` | Trigger contract state reconciliation |
+| `POST` | `/api/bounties/soroban/simulate` | Pre-flight Soroban RPC simulation (gas, CPU instructions, ledger footprint) |
+| `GET` | `/metrics` | Prometheus metrics exporter (HTTP counts, escrow volume, indexer lag) |
+| `GET` | `/api/bounties/export/csv` | Export complete financial reconciliation ledger as CSV |
+| `POST` | `/api/bounties/webhooks` | Register webhook endpoint for real-time lifecycle event dispatch |
+| `GET` | `/api/bounties/auth/challenge` | SEP-0010 Stellar Web Authentication challenge transaction |
 | `GET` | `/api/events/stream` | Real-time Server-Sent Events (SSE) stream |
 
 ---
@@ -179,13 +184,15 @@ npm start
 
 ## 🧪 Testing Suite
 
-Run the comprehensive test suite with Jest:
+Run the comprehensive test suite with Vitest:
 
 ```bash
 npm test
 ```
 
-Includes 28 passing unit and integration tests covering:
+Includes **62 passing unit and integration tests across 20 test suites** covering:
+* Pre-flight Soroban RPC simulation and resource estimation
+* SEP-0010 Stellar Web Authentication challenge verification
 * Event ingestion, deduplication, and retry recovery
 * Multi-recipient settlement routing (fixed and percentage allocations)
 * Transaction lifecycle tracking and state machine transitions

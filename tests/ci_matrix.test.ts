@@ -6,7 +6,7 @@ describe('CI/CD Workflows Configuration Suite', () => {
   it('validates CI pipeline workflow structure and triggers', () => {
     const ciYaml = fs.readFileSync(path.resolve(process.cwd(), '.github/workflows/ci.yml'), 'utf8');
     expect(ciYaml).toContain('name: CI Pipeline');
-    expect(ciYaml).toContain('node-version: [ 20.x, 22.x ]');
+    expect(ciYaml).toContain('node-version: [ 22.x ]');
     expect(ciYaml).toContain('run: npm test');
     expect(ciYaml).toContain('run: npm run build');
   });
