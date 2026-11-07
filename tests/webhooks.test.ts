@@ -36,4 +36,18 @@ describe('Stellar Bounty Treasury Backend API — Webhook Subscriptions Suite', 
     expect(listRes.status).toBe(200);
     expect(listRes.body.data.length).toBeGreaterThanOrEqual(1);
   });
+
+  it('rejects SSRF attempts targeting localhost or metadata endpoints', async () => {
+    const localhostRes = await request(app).post('/api/bounties/webhooks').send({
+      url: 'http://localhost:5000/internal',
+    });
+    expect(localhostRes.status).toBe(400);
+    expect(localhostRes.body.error).toContain('prohibited');
+
+    const metadataRes = await request(app).post('/api/bounties/webhooks').send({
+      url: 'http://169.254.169.254/latest/meta-data/',
+    });
+    expect(metadataRes.status).toBe(400);
+    expect(metadataRes.body.error).toContain('prohibited');
+  });
 });

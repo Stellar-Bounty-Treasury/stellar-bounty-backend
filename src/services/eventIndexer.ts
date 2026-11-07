@@ -67,11 +67,26 @@ export class EventIndexerService {
         switch (event.eventType) {
           case 'bounty_funded':
             if (event.bountyId && event.payload.amount) {
-              db.prepare(`
-                UPDATE bounties
-                SET funded_amount = funded_amount + ?, updated_at = ?
-                WHERE id = ?
-              `).run(event.payload.amount, now, event.bountyId);
+              // Prevent double-counting: only increment if not already accounted for by internal contribution recording
+              const isInternal = event.payload.source === 'internal_record';
+              const existingTx = event.txHash
+                ? (db.prepare(`SELECT id FROM contributions WHERE transaction_hash = ?`).get(event.txHash) as any)
+                : null;
+
+              if (!isInternal && !existingTx) {
+                const b = db.prepare(`SELECT funded_amount, target_amount FROM bounties WHERE id = ?`).get(event.bountyId) as any;
+                if (b) {
+                  const newFunded = Math.round((b.funded_amount + event.payload.amount) * 10000000) / 10000000;
+                  const newStatus = newFunded >= b.target_amount ? 'funded' : undefined;
+                  if (newStatus) {
+                    db.prepare(`UPDATE bounties SET funded_amount = ?, status = ?, updated_at = ? WHERE id = ?`)
+                      .run(newFunded, newStatus, now, event.bountyId);
+                  } else {
+                    db.prepare(`UPDATE bounties SET funded_amount = ?, updated_at = ? WHERE id = ?`)
+                      .run(newFunded, now, event.bountyId);
+                  }
+                }
+              }
             }
             break;
 

@@ -1,5 +1,14 @@
 import { getDatabase } from '../db/database.js';
 
+function sanitizeCsvCell(val: any): string {
+  let str = (val === null || val === undefined ? '' : String(val)).trim();
+  // Prevent CSV / Spreadsheet Formula Injection
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = `'${str}`;
+  }
+  return `"${str.replace(/"/g, '""')}"`;
+}
+
 export class ExportService {
   public generateBountiesCsv(): string {
     const db = getDatabase();
@@ -11,12 +20,12 @@ export class ExportService {
     for (const r of rows) {
       lines.push([
         r.id,
-        `"${(r.title || '').replace(/"/g, '""')}"`,
-        r.creator_address,
+        sanitizeCsvCell(r.title),
+        sanitizeCsvCell(r.creator_address),
         r.target_amount,
         r.funded_amount,
-        r.status,
-        r.created_at,
+        sanitizeCsvCell(r.status),
+        sanitizeCsvCell(r.created_at),
       ].join(','));
     }
 

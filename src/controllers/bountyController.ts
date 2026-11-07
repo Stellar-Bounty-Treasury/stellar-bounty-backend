@@ -385,7 +385,7 @@ export async function recordContribution(req: Request, res: Response): Promise<v
   try {
     const rawId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
     const bountyId = parseInt(String(rawId), 10);
-    const { contributor_address, amount, transaction_hash, skip_verification } = req.body;
+    const { contributor_address, amount, transaction_hash } = req.body;
 
     const result = await bountyService.recordContribution(
       bountyId,
@@ -393,8 +393,7 @@ export async function recordContribution(req: Request, res: Response): Promise<v
         contributor_address,
         amount: Number(amount),
         transaction_hash,
-      },
-      skip_verification === true
+      }
     );
 
     res.status(201).json({
@@ -764,7 +763,7 @@ export async function createWebhookHandler(req: Request, res: Response): Promise
     const hook = webhookService.registerWebhook(url, secret, event_types);
     res.status(201).json({ success: true, data: hook });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    res.status(400).json({ success: false, error: err.message });
   }
 }
 

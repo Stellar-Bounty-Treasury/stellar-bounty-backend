@@ -814,7 +814,8 @@ export class BountyService {
     }
 
     let verifiedAmount = data.amount;
-    if (!skipVerification) {
+    const isTestEnv = process.env.NODE_ENV === 'test';
+    if (!skipVerification || !isTestEnv) {
       const verifiedTx = await this.stellar.verifyTransaction(
         txHash,
         data.amount,
@@ -861,7 +862,7 @@ export class BountyService {
         eventType: 'bounty_funded',
         bountyId,
         txHash,
-        payload: { amount: verifiedAmount, contributor: data.contributor_address },
+        payload: { amount: verifiedAmount, contributor: data.contributor_address, source: 'internal_record' },
       });
 
       return { contribution, bounty: updatedBounty };

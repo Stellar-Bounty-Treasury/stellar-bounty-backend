@@ -54,12 +54,21 @@ export class SorobanRpcService {
         error: res.error,
       };
     } catch (err: any) {
-      // Fallback mock estimation if offline/test environment
+      if (config.nodeEnv === 'test') {
+        // Fallback test fixture estimation if in offline test environment
+        return {
+          success: true,
+          minResourceFee: '2500',
+          cpuInstructions: 75000,
+          memoryBytes: 32768,
+        };
+      }
       return {
-        success: true,
-        minResourceFee: '2500',
-        cpuInstructions: 75000,
-        memoryBytes: 32768,
+        success: false,
+        minResourceFee: '0',
+        cpuInstructions: 0,
+        memoryBytes: 0,
+        error: `Soroban simulation failed: ${err.message || 'RPC Network error'}`,
       };
     }
   }

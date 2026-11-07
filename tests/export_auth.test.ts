@@ -30,6 +30,21 @@ describe('Stellar Bounty Treasury Backend API — CSV Export and SEP-10 Auth Sui
     expect(res.text).toContain('ID,Title,Creator Address');
   });
 
+  it('sanitizes formula injection characters in exported CSV rows', async () => {
+    // Insert a potentially malicious bounty title with formula trigger
+    await request(app).post('/api/bounties').send({
+      title: '=cmd|"/C calc"!A0',
+      description: 'Formula injection probe',
+      creator_address: 'GBSVC3MFSXVVYNUP6MUNDSM37G4ED5JACUSG3OLDSPBOYIYM6XGL4OAB',
+      target_amount: 100,
+    });
+
+    const res = await request(app).get('/api/bounties/export/csv');
+    expect(res.status).toBe(200);
+    // Formula trigger must be neutralized by prepending single quote
+    expect(res.text).toContain(`"'=cmd|""/C calc""!A0"`);
+  });
+
   it('generates SEP-10 authentication challenge', async () => {
     const pubKey = 'GBSVC3MFSXVVYNUP6MUNDSM37G4ED5JACUSG3OLDSPBOYIYM6XGL4OAB';
     const res = await request(app).get(`/api/bounties/auth/challenge?public_key=${pubKey}`);

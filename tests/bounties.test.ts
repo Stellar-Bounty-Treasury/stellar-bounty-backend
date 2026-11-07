@@ -194,6 +194,27 @@ describe('Stellar Bounty Treasury Backend API — Core Escrow & Milestones Suite
       expect(res.status).toBe(200);
       expect(res.body.count).toBeGreaterThanOrEqual(1);
     });
+
+    it('records contribution with zero double-counting accounting flaw', async () => {
+      const db = getDatabase();
+      const bBefore = db.prepare('SELECT funded_amount FROM bounties WHERE id = 1').get() as any;
+      const initialFunded = bBefore.funded_amount;
+
+      // Record a 50 XLM contribution using testnet transaction mock
+      const txHash = '0000000000000000000000000000000000000000000000000000000000000042';
+      const cRes = await request(app)
+        .post('/api/bounties/1/contributions')
+        .send({
+          contributor_address: validContributor,
+          amount: 50,
+          transaction_hash: txHash,
+        });
+
+      expect(cRes.status).toBe(201);
+      const bAfter = db.prepare('SELECT funded_amount FROM bounties WHERE id = 1').get() as any;
+      // Must be EXACTLY initialFunded + 50, NOT initialFunded + 100 (which occurred during double counting)
+      expect(bAfter.funded_amount).toBe(initialFunded + 50);
+    });
   });
 
   describe('POST /api/reconcile', () => {

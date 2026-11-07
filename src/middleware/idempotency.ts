@@ -7,13 +7,17 @@ export function idempotencyMiddleware(req: Request, res: Response, next: NextFun
     return next();
   }
 
+  const normalizedPath = req.originalUrl || req.path;
   const db = getDatabase();
-  const existing = db.prepare('SELECT status_code, response_json FROM idempotency_keys WHERE idempotency_key = ?').get(key) as { status_code: number; response_json: string } | undefined;
+  const existing = db
+    .prepare('SELECT path, status_code, response_json FROM idempotency_keys WHERE idempotency_key = ?')
+    .get(key) as { path: string; status_code: number; response_json: string } | undefined;
 
-  if (existing) {
+  if (existing && (existing.path === normalizedPath || existing.path === req.path)) {
     try {
       const data = JSON.parse(existing.response_json);
-      res.status(existing.status_code).setHeader('X-Cache-Lookup', 'HIT-IDEMPOTENCY').json(data);
+      res.setHeader('X-Cache-Lookup', 'HIT-IDEMPOTENCY');
+      res.status(existing.status_code).json(data);
       return;
     } catch (_) {}
   }
@@ -25,7 +29,7 @@ export function idempotencyMiddleware(req: Request, res: Response, next: NextFun
       db.prepare(`
         INSERT OR REPLACE INTO idempotency_keys (idempotency_key, path, status_code, response_json, created_at)
         VALUES (?, ?, ?, ?, ?)
-      `).run(key, req.path, res.statusCode, JSON.stringify(body), new Date().toISOString());
+      `).run(key, normalizedPath, res.statusCode, JSON.stringify(body), new Date().toISOString());
     } catch (_) {}
     return originalJson(body);
   };

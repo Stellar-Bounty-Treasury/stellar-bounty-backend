@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { requireAdmin } from '../middleware/auth.js';
 import {
   createBounty,
   listBounties,
@@ -50,8 +51,8 @@ bountyRouter.get('/audit-logs', getAuditLogsHandler);
 bountyRouter.get('/leaderboard', getLeaderboardHandler);
 bountyRouter.get('/stats/timeline', getTimelineStatsHandler);
 bountyRouter.post('/soroban/simulate', simulateTransactionHandler);
-bountyRouter.post('/webhooks', createWebhookHandler);
-bountyRouter.get('/webhooks', listWebhooksHandler);
+bountyRouter.post('/webhooks', requireAdmin, createWebhookHandler);
+bountyRouter.get('/webhooks', requireAdmin, listWebhooksHandler);
 bountyRouter.get('/export/csv', exportCsvHandler);
 bountyRouter.get('/auth/challenge', getAuthChallengeHandler);
 
