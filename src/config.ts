@@ -6,7 +6,11 @@ dotenv.config();
 export const config = {
   port: parseInt(process.env.PORT || '5000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
-  corsOrigin: process.env.CORS_ORIGIN || '*',
+  corsOrigin:
+    process.env.CORS_ORIGIN ||
+    (process.env.NODE_ENV === 'production'
+      ? ['https://stellarbounty.org', 'https://stellar-bounty-frontend.vercel.app']
+      : '*'),
   databasePath: process.env.DATABASE_PATH || path.resolve(process.cwd(), 'data', 'treasury.db'),
   stellarNetwork: process.env.STELLAR_NETWORK || 'TESTNET',
   horizonUrl: process.env.HORIZON_URL || 'https://horizon-testnet.stellar.org',

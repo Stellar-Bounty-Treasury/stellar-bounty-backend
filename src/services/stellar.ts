@@ -82,14 +82,16 @@ export class StellarService {
         );
       }
 
-      if (
-        expectedDestination &&
-        destination &&
-        expectedDestination.toLowerCase() !== destination.toLowerCase()
-      ) {
-        throw new Error(
-          `Destination mismatch: payment was sent to ${destination}, expected ${expectedDestination}.`
-        );
+      if (expectedDestination && destination) {
+        const allowed = [
+          expectedDestination.toLowerCase(),
+          config.contractAddress?.toLowerCase(),
+        ].filter(Boolean);
+        if (!allowed.includes(destination.toLowerCase())) {
+          throw new Error(
+            `Destination mismatch: payment was sent to ${destination}, expected ${allowed.join(' or ')}.`
+          );
+        }
       }
 
       return {
