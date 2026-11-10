@@ -11,5 +11,5 @@ describe('Stellar Bounty Treasury Backend API — Soroban RPC Simulation Suite',
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data.cpuInstructions).toBeGreaterThan(0);
-  });
+  }, 10000);
 });

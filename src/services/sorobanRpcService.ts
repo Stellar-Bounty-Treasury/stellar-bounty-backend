@@ -17,6 +17,9 @@ export class SorobanRpcService {
     }
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+
       const response = await fetch(config.sorobanRpcUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -26,7 +29,8 @@ export class SorobanRpcService {
           method: 'simulateTransaction',
           params: { transaction: txXdr },
         }),
-      });
+        signal: controller.signal,
+      }).finally(() => clearTimeout(timeoutId));
 
       if (!response.ok) {
         throw new Error(`Soroban RPC error: ${response.statusText}`);
